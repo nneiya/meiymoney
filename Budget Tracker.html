@@ -1,0 +1,3371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 2rem; font-family: 'Poppins', sans-serif; background: #ffffff; }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    /* Alegreya for headers */
+    .header h1 { font-family: 'Alegreya', serif; font-weight: 700; }
+    h2, h3, h4 { font-family: 'Alegreya', serif; font-weight: 400; }
+    
+    .header { background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); padding: 2rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; color: #F1ECD9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .header h1 { margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 1px; }
+    .data-btns { display: flex; gap: 8px; }
+    .data-btn { padding: 8px 14px; font-size: 13px; background: rgba(255,255,255,0.2); color: #F1ECD9; border: 0.5px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .data-btn:hover { background: rgba(255,255,255,0.3); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 2rem; background: #f5f5f5; padding: 8px; border-radius: 12px; flex-wrap: wrap; }
+    .tab { flex: 1; min-width: 120px; padding: 12px 16px; border: 0.5px solid #e0e0e0; background: transparent; color: #333; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; position: relative; }
+    .tab.active { background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border-color: #626E6A; }
+    .tab:hover:not(.active) { background: #e8e8e8; }
+    .reminder-badge { position: absolute; top: 4px; right: 4px; background: #EF4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .card { background: #ffffff; border: 0.5px solid #e0e0e0; border-radius: 12px; padding: 1.25rem; }
+    .bordered-section { border: 2px solid #8B998C; border-radius: 16px; padding: 2rem; background: #ffffff; }
+    .metric-card { background: #F1ECD9; border-radius: 8px; padding: 1rem; }
+    .metric-label { font-size: 13px; color: #626E6A; margin-bottom: 4px; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .metric-value { font-size: 24px; font-weight: 600; color: #45504C; }
+    .stat-card { background: #f5f5f5; border-radius: 8px; padding: 1rem; }
+    .stat-label { font-size: 12px; color: #666; margin-bottom: 4px; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .stat-value { font-size: 16px; font-weight: 600; color: #333; }
+    .category-btn { padding: 12px; border: 2px solid #8B998C; background: #ffffff; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: 'Poppins', sans-serif; }
+    .category-btn.active { border-color: #626E6A; background: rgba(139, 153, 140, 0.1); }
+    .tag { display: inline-block; font-size: 11px; padding: 3px 8px; border-radius: 8px; background: #CEC8B2; color: #45504C; cursor: pointer; font-family: 'Poppins', sans-serif; margin: 2px; font-weight: 500; }
+    .tag:hover { background: #8B998C; color: #F1ECD9; }
+    .tag-suggestions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    input, select, textarea { width: 100%; padding: 8px 12px; border: 0.5px solid #ccc; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; }
+    .bordered-section input, .bordered-section select, .bordered-section textarea { border: 2px solid #8B998C; border-radius: 12px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #666; font-family: 'Poppins', sans-serif; }
+    button[type="submit"] { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; font-family: 'Poppins', sans-serif; }
+    .delete-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .details-btn, .edit-btn, .paid-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; margin-left: 4px; font-weight: 500; }
+    .details-btn:hover, .edit-btn:hover, .paid-btn:hover { background: rgba(139, 153, 140, 0.1); }
+    .export-btn { padding: 10px 16px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; }
+    .preset-btn { padding: 6px 12px; font-size: 13px; background: #f5f5f5; border: 0.5px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .preset-btn:hover { background: #e8e8e8; }
+    .chart-container { margin: 2rem 0; height: 300px; }
+    
+    .filter-dropdown { position: relative; display: inline-block; margin-bottom: 1rem; margin-right: 8px; }
+    .filter-dropdown-btn { padding: 10px 20px; font-size: 14px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 20px; cursor: pointer; font-family: 'Poppins', sans-serif; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .filter-dropdown-btn:hover { background: #e8e8e8; }
+    .filter-badge { background: #8B998C; color: #F1ECD9; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+    .filter-menu { display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: #FFFFFF; border: 1px solid #8B998C; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 250px; }
+    .filter-menu.open { display: block; }
+    .filter-menu-item { padding: 12px 16px; cursor: pointer; border-bottom: 0.5px solid #e0e0e0; font-family: 'Poppins', sans-serif; font-size: 14px; display: flex; justify-content: space-between; align-items: center; position: relative; font-weight: 500; }
+    .filter-menu-item:hover { background: #F1ECD9; }
+    .filter-menu-item:last-child { border-bottom: none; }
+    .filter-submenu { display: none; position: absolute; left: 100%; top: 0; margin-left: 8px; background: #FFFFFF; border: 1px solid #8B998C; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 200px; max-height: 300px; overflow-y: auto; z-index: 101; }
+    .filter-submenu.open { display: block; }
+    .filter-option { padding: 10px 16px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; }
+    .filter-option:hover { background: #F1ECD9; }
+    .filter-option.active { background: #8B998C; color: #F1ECD9; }
+    
+    .search-box { padding: 8px 12px; border: 0.5px solid #ccc; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; width: 100%; margin-bottom: 1rem; }
+    
+    .transactions-table { width: 100%; border-collapse: collapse; font-family: 'Poppins', sans-serif; font-size: 14px; }
+    .transactions-table th { text-align: left; padding: 10px 12px; background: #8B998C; color: #F1ECD9; font-weight: 600; border-bottom: 2px solid #626E6A; }
+    .transactions-table td { padding: 6px 12px; border-bottom: 0.5px solid #e0e0e0; }
+    .transactions-table tr:hover { background: #f5f5f5; }
+    .transactions-table tr.recurring-row { background: rgba(139, 153, 140, 0.05); }
+    .transactions-table tr.paid-row { opacity: 0.6; }
+    .recurring-badge { background: #8B998C; color: #F1ECD9; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+    .paid-badge { background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+    
+    .cc-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .cc-card { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 16px; padding: 1.25rem; transition: all 0.3s ease; width: calc(33.333% - 0.67rem); }
+    .cc-card.due-soon { background: rgba(239, 68, 68, 0.1); border-color: #EF4444; }
+    .cc-card.paid { opacity: 0.7; background: rgba(16, 185, 129, 0.05); border-color: #10b981; }
+    .cc-card-name { font-weight: 600; font-size: 15px; margin-bottom: 12px; font-family: 'Poppins', sans-serif; display: flex; justify-content: space-between; align-items: center; }
+    .cc-card-dates { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 12px; }
+    .cc-date-item { flex: 1; }
+    .cc-date-label { font-size: 11px; color: #666; margin-bottom: 4px; font-family: 'Poppins', sans-serif; text-transform: uppercase; font-weight: 600; }
+    .cc-date-value { font-size: 14px; font-weight: 600; font-family: 'Poppins', sans-serif; }
+    .cc-amount-input { width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; }
+    .cc-amount-display { padding: 8px; background: #F1ECD9; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; color: #45504C; flex: 1; }
+    .due-badge { display: inline-block; background: #EF4444; color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; margin-top: 8px; }
+    
+    .view-toggle { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .view-toggle-btn { padding: 8px 16px; font-size: 14px; background: #f5f5f5; border: 0.5px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .view-toggle-btn.active { background: #8B998C; color: #F1ECD9; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: #F1ECD9; border-radius: 12px; padding: 2rem; max-width: 400px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin: 0 0 1rem; font-size: 20px; color: #45504C; font-weight: 400; }
+    .modal-content p { margin: 0 0 1.5rem; color: #626E6A; font-family: 'Poppins', sans-serif; }
+    .modal-btn { padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; }
+    
+    .details-modal { max-width: 500px; text-align: left; }
+    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid #CEC8B2; }
+    .detail-label { font-weight: 600; color: #626E6A; font-family: 'Poppins', sans-serif; font-size: 13px; }
+    .detail-value { color: #45504C; font-family: 'Poppins', sans-serif; font-size: 13px; }
+    
+    .insight-card { padding: 8px 12px; background: rgba(239, 68, 68, 0.05); border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-family: 'Poppins', sans-serif; }
+    .insight-card.positive { background: rgba(139, 153, 140, 0.05); }
+    .pattern-card { padding: 8px 12px; background: #f5f5f5; border-radius: 8px; margin-bottom: 6px; font-size: 13px; font-family: 'Poppins', sans-serif; border-left: 3px solid #8B998C; }
+    
+    .checkbox-container { display: flex; align-items: center; gap: 8px; }
+    .checkbox-container input[type="checkbox"] { width: auto; }
+    
+    .add-cc-form { padding: 1.5rem; background: #f5f5f5; border-radius: 8px; margin-bottom: 1rem; }
+    
+    @media (max-width: 768px) {
+      .cc-card { width: 100%; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>meiy money</h1>
+      <div class="data-btns">
+        <button class="data-btn" onclick="saveData()">Save Data</button>
+        <button class="data-btn" onclick="document.getElementById('loadFile').click()">Load Data</button>
+        <input type="file" id="loadFile" accept=".json" style="display: none;" onchange="loadData(event)">
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showView('dashboard')">Dashboard</button>
+      <button class="tab" onclick="showView('quick-add')">Quick Add</button>
+      <button class="tab" onclick="showView('transactions')">
+        History
+        <span class="reminder-badge" id="recurringReminder" style="display: none;">!</span>
+      </button>
+      <button class="tab" onclick="showView('reminders')">Reminders</button>
+      <button class="tab" onclick="showView('notes')">Notes</button>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard" class="view active">
+      <!-- Metrics -->
+      <div class="grid" style="margin-bottom: 2rem;">
+        <div class="metric-card">
+          <div class="metric-label">This month income</div>
+          <div class="metric-value" id="monthIncome">₱0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">This month expenses</div>
+          <div class="metric-value" style="color: #626E6A;" id="monthExpenses">₱0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Balance</div>
+          <div class="metric-value" id="balance">₱0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total transactions</div>
+          <div class="metric-value" id="totalTransactions">0</div>
+        </div>
+      </div>
+
+      <!-- AI Insights & Pattern Analysis -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">AI Insights</h3>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="font-size: 14px; font-weight: 600; color: #8B998C; margin-bottom: 0.75rem; font-family: 'Poppins', sans-serif;">Month-over-Month Changes</h4>
+          <div id="insightsContainer"></div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 14px; font-weight: 600; color: #8B998C; margin-bottom: 0.75rem; font-family: 'Poppins', sans-serif;">Spending Patterns</h4>
+          <div id="patternsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card" style="margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">Quick Stats</h3>
+        <div class="grid">
+          <div class="stat-card">
+            <div class="stat-label">Most expensive</div>
+            <div class="stat-value" id="mostExpensive">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Most used payment</div>
+            <div class="stat-value" id="mostUsedPayment">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Average daily spend</div>
+            <div class="stat-value" id="avgDaily">₱0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Top category</div>
+            <div class="stat-value" id="topCategory">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spending Forecast & Achievements Row -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <!-- Spending Forecast -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(139, 153, 140, 0.1) 0%, rgba(98, 110, 106, 0.05) 100%); border: 2px solid #8B998C;">
+          <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">📈 Spending Forecast</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+              <div style="font-size: 13px; color: #666; margin-bottom: 8px;">Current Month Spending</div>
+              <div style="font-size: 28px; font-weight: 600; color: #8B998C; margin-bottom: 1rem;" id="currentMonthSpend">₱0</div>
+              <div style="font-size: 13px; color: #666; margin-bottom: 4px;">Days elapsed: <span id="daysElapsed">0</span> days</div>
+              <div style="font-size: 13px; color: #666;">Days remaining: <span id="daysRemaining">0</span> days</div>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: #666; margin-bottom: 8px;">Projected Total (by month-end)</div>
+              <div style="font-size: 28px; font-weight: 600; color: #45504C; margin-bottom: 1rem;" id="projectedSpend">₱0</div>
+              <div style="font-size: 13px; padding: 10px; background: #F1ECD9; border-radius: 8px; margin-bottom: 8px;" id="forecastMessage">
+                Loading forecast...
+              </div>
+              <div style="font-size: 12px; color: #999;">Based on your current spending rate</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievement Section -->
+        <div class="card" style="background: linear-gradient(135deg, rgba(245, 215, 66, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%); border: 2px solid #FFB700;">
+          <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">🏆 Achievements</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" id="achievementsList">
+            Loading achievements...
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="card">
+          <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">Spending by Category</h3>
+          <div style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+              <button class="preset-btn" onclick="setDateRange('today')">Today</button>
+              <button class="preset-btn" onclick="setDateRange('week')">Last 7 Days</button>
+              <button class="preset-btn" onclick="setDateRange('month')">Last 30 Days</button>
+              <button class="preset-btn" onclick="setDateRange('thisMonth')">This Month</button>
+              <button class="preset-btn" onclick="setDateRange('lastMonth')">Last Month</button>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1;">
+                <label style="margin-bottom: 4px;">Start Date</label>
+                <input type="date" id="categoryStartDate" onchange="updateCategoryChart()" style="min-width: 150px;">
+              </div>
+              <div style="flex: 1;">
+                <label style="margin-bottom: 4px;">End Date</label>
+                <input type="date" id="categoryEndDate" onchange="updateCategoryChart()" style="min-width: 150px;">
+              </div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+            <h4 style="margin: 0 0 1rem; font-size: 14px; font-weight: 600;">📊 Category Insights</h4>
+            <div id="categoryInsights" style="font-size: 13px; color: #666; line-height: 1.6;">
+              Loading insights...
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">Spending by Payment</h3>
+          <div style="margin-bottom: 1rem;">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+              <button class="preset-btn" onclick="setDateRange('today')">Today</button>
+              <button class="preset-btn" onclick="setDateRange('week')">Last 7 Days</button>
+              <button class="preset-btn" onclick="setDateRange('month')">Last 30 Days</button>
+              <button class="preset-btn" onclick="setDateRange('thisMonth')">This Month</button>
+              <button class="preset-btn" onclick="setDateRange('lastMonth')">Last Month</button>
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <div style="flex: 1;">
+                <label style="margin-bottom: 4px;">Start Date</label>
+                <input type="date" id="startDate" onchange="updatePaymentChart()" style="min-width: 150px;">
+              </div>
+              <div style="flex: 1;">
+                <label style="margin-bottom: 4px;">End Date</label>
+                <input type="date" id="endDate" onchange="updatePaymentChart()" style="min-width: 150px;">
+              </div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="paymentChart"></canvas>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+            <h4 style="margin: 0 0 1rem; font-size: 14px; font-weight: 600;">💳 Payment Analysis</h4>
+            <div id="paymentAnalysis" style="font-size: 13px; color: #666; line-height: 1.6;">
+              Loading analysis...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Add View -->
+    <div id="quick-add" class="view">
+      <div style="max-width: 900px; margin: 0 auto;">
+        
+        <!-- Custom Categories -->
+        <div class="bordered-section" style="margin-bottom: 2rem; background: #F1ECD9; border: 2px solid #8B998C;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 400;">⚙️ Manage Categories</h2>
+            <button onclick="toggleCategoryManager()" style="padding: 8px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;">
+              Update Categories
+            </button>
+          </div>
+          
+          <div id="categoryManager" style="display: none;">
+            <div style="margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 8px;">
+              <h4 style="margin: 0 0 1rem; font-size: 14px; font-weight: 600;">Add New Category</h4>
+              <form id="addCategoryForm" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <div>
+                  <label>Category Name</label>
+                  <input type="text" id="newCatName" placeholder="e.g., Subscriptions" required style="border: 0.5px solid #ccc;">
+                </div>
+                <div>
+                  <label>Icon (Emoji)</label>
+                  <input type="text" id="newCatIcon" placeholder="🎮" maxlength="2" required style="border: 0.5px solid #ccc;">
+                </div>
+                <div>
+                  <label>Color</label>
+                  <input type="color" id="newCatColor" value="#8B998C" style="border: 0.5px solid #ccc; height: 40px;">
+                </div>
+                <button type="submit" style="padding: 10px 16px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600;">Add</button>
+              </form>
+            </div>
+            
+            <div id="categoryList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;"></div>
+          </div>
+        </div>
+
+        <div class="bordered-section" style="margin-bottom: 2rem;">
+          <h2 style="margin: 0 0 1.5rem; font-size: 22px; font-weight: 400;">Add Expense</h2>
+          <form id="expenseForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <label>Date</label>
+                <input type="date" id="date" required>
+              </div>
+              <div>
+                <label>Amount (₱)</label>
+                <input type="number" id="amount" step="0.01" placeholder="0.00" required>
+              </div>
+              <div>
+                <label>Payment Method</label>
+                <select id="paymentMethod">
+                  <option>Cash</option>
+                  <option>Eastwest Gold</option>
+                  <option>Maribank</option>
+                  <option>Maya</option>
+                  <option>Maya Black</option>
+                  <option>Unionbank Platinum</option>
+                  <option>Unionbank U</option>
+                  <option>Atome</option>
+                  <option>Tiktokpaylater</option>
+                  <option>Lazpaylater</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label>Category</label>
+              <div id="categoryButtons" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;"></div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label>Tags (click to add, or type comma-separated)</label>
+              <div class="tag-suggestions" id="tagSuggestions"></div>
+              <input type="text" id="tags" placeholder="work, reimbursable, urgent">
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label>Notes (optional)</label>
+              <input type="text" id="expenseNotes" placeholder="What was this for?">
+            </div>
+
+            <div class="checkbox-container" style="margin-bottom: 1rem;">
+              <input type="checkbox" id="isRecurring">
+              <label style="margin: 0;">Mark as recurring expense</label>
+            </div>
+
+            <div id="recurringFields" style="display: none; margin-bottom: 1rem;">
+              <label>Recurrence Frequency</label>
+              <select id="frequency">
+                <option value="weekly">Weekly</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+
+            <button type="submit">Add Expense</button>
+          </form>
+        </div>
+
+        <div class="bordered-section">
+          <h2 style="margin: 0 0 1.5rem; font-size: 22px; font-weight: 400;">Add Income</h2>
+          <form id="incomeForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+              <div>
+                <label>Date</label>
+                <input type="date" id="incomeDate" required>
+              </div>
+              <div>
+                <label>Amount (₱)</label>
+                <input type="number" id="incomeAmount" step="0.01" placeholder="0.00" required>
+              </div>
+              <div>
+                <label>Source</label>
+                <input type="text" id="incomeSource" placeholder="Salary, etc." required>
+              </div>
+            </div>
+            <button type="submit" style="background: linear-gradient(135deg, #8B998C 0%, #45504C 100%);">Add Income</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions History View -->
+    <div id="transactions" class="view">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 12px;">
+          <h2 style="margin: 0; font-size: 22px; font-weight: 400;">Transaction History</h2>
+          <div style="display: flex; gap: 8px;">
+            <button class="export-btn" onclick="generateRecurring()">Generate Recurring</button>
+            <button class="export-btn" onclick="exportData()">Export CSV</button>
+          </div>
+        </div>
+
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" id="transactionsToggle" onclick="toggleHistoryView('transactions')">Transactions</button>
+          <button class="view-toggle-btn" id="incomeToggle" onclick="toggleHistoryView('income')">Income</button>
+          <button class="view-toggle-btn" id="billStatementsToggle" onclick="toggleHistoryView('billStatements')">Bill Statements</button>
+        </div>
+
+        <div id="transactionsView">
+          <input type="text" class="search-box" id="searchBox" placeholder="Search notes..." oninput="applyFilters()">
+
+          <div class="filter-dropdown">
+            <button class="filter-dropdown-btn" onclick="toggleFilterMenu()">
+              <span>Filters</span>
+              <span class="filter-badge" id="activeFilterCount">0</span>
+            </button>
+            <div class="filter-menu" id="filterMenu">
+              <div class="filter-menu-item" onclick="toggleSubmenu('month')">
+                <span>Month</span>
+                <span>›</span>
+                <div class="filter-submenu" id="submenu-month"></div>
+              </div>
+              <div class="filter-menu-item" onclick="toggleSubmenu('category')">
+                <span>Category</span>
+                <span>›</span>
+                <div class="filter-submenu" id="submenu-category"></div>
+              </div>
+              <div class="filter-menu-item" onclick="toggleSubmenu('payment')">
+                <span>Payment Method</span>
+                <span>›</span>
+                <div class="filter-submenu" id="submenu-payment"></div>
+              </div>
+              <div class="filter-menu-item" onclick="toggleSubmenu('tag')">
+                <span>Tag</span>
+                <span>›</span>
+                <div class="filter-submenu" id="submenu-tag"></div>
+              </div>
+              <div class="filter-menu-item" onclick="toggleSubmenu('type')">
+                <span>Type</span>
+                <span>›</span>
+                <div class="filter-submenu" id="submenu-type"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="preset-btn" onclick="removeFilters()">Remove Filters</button>
+
+          <div style="margin-top: 1rem; margin-bottom: 1rem; font-size: 14px; color: #666; font-family: 'Poppins', sans-serif;">
+            Showing <strong id="filteredCount">0</strong> transactions | Total: <strong id="filteredTotal">₱0</strong>
+          </div>
+
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Notes</th>
+                <th style="text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsList"></tbody>
+          </table>
+        </div>
+
+        <div id="incomeView" style="display: none;">
+          <div id="incomeList"></div>
+        </div>
+
+        <div id="billStatementsView" style="display: none;">
+          <input type="text" class="search-box" id="billStatementSearch" placeholder="Search bill statements..." oninput="renderBillStatements()">
+          
+          <div style="margin-bottom: 1rem; font-size: 14px; color: #666; font-family: 'Poppins', sans-serif;">
+            Total Payments: <strong id="billStatementCount">0</strong> | Total Amount: <strong id="billStatementTotal">₱0</strong>
+          </div>
+
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Date Paid</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Amount</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billStatementsList"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reminders View -->
+    <div id="reminders" class="view">
+      <!-- Date Display -->
+      <div style="background: #f5f5f5; border: 2px solid #8B998C; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+        <h3 id="currentDateDisplay" style="margin: 0; font-size: 18px; font-weight: 400; color: #626E6A;"></h3>
+      </div>
+
+      <!-- Credit Cards -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">CC dues</h3>
+        
+        <!-- Add New Credit Card -->
+        <div class="add-cc-form" id="addCCForm" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="margin: 0; font-size: 16px; font-weight: 600;">Add New Credit Card</h4>
+            <button onclick="document.getElementById('addCCForm').style.display = 'none'" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: #666;">×</button>
+          </div>
+          <form id="newCCForm">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+              <div>
+                <label>Card Name</label>
+                <input type="text" id="ccName" placeholder="e.g., BPI Gold" required>
+              </div>
+              <div>
+                <label>Statement Day</label>
+                <input type="number" id="ccStatement" min="1" max="31" placeholder="15" required>
+              </div>
+              <div>
+                <label>Due Day</label>
+                <input type="number" id="ccDue" min="1" max="31" placeholder="30" required>
+              </div>
+              <button type="submit" style="padding: 8px 16px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; margin-top: 0; width: auto;">
+                Add
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <button onclick="document.getElementById('addCCForm').style.display = document.getElementById('addCCForm').style.display === 'none' ? 'block' : 'none'" class="preset-btn" style="margin-bottom: 1rem;">
+          + Add New Credit Card
+        </button>
+
+        <div class="cc-grid" id="ccContainer"></div>
+      </div>
+
+      <!-- Bill Reminders -->
+      <div class="card">
+        <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">Bill dues</h3>
+        
+        <form id="billReminderForm" style="margin-bottom: 2rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end;">
+            <div>
+              <label>Bill Name</label>
+              <input type="text" id="billName" placeholder="Internet, Water, etc." required>
+            </div>
+            <div>
+              <label>Due Day</label>
+              <input type="number" id="billDue" min="1" max="31" placeholder="15" required>
+            </div>
+            <button type="submit" style="padding: 8px 16px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; margin-top: 0; width: auto;">
+              Add
+            </button>
+          </div>
+        </form>
+
+        <div id="billRemindersContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Notes View -->
+    <div id="notes" class="view">
+      <!-- Row 1: Notes (Full Width) -->
+      <div style="margin-bottom: 2rem;">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 400;">📝 Notes</h3>
+            <button onclick="showAddNoteModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;">+ New</button>
+          </div>
+          <div id="notesList"></div>
+        </div>
+      </div>
+
+      <!-- Row 2: To Do & To Buy (Side by Side) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- Column 1: To Do List -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 400;">To Do</h3>
+            <button onclick="showAddChecklistModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;">+ New</button>
+          </div>
+          <div id="checklistList"></div>
+        </div>
+
+        <!-- Column 2: To Buy List -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 400;">🛒 To Buy</h3>
+            <button onclick="showAddTobuyModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;">+ New</button>
+          </div>
+          <div id="tobuyList"></div>
+        </div>
+
+      </div>
+
+      <!-- Row 3: Savings Goals Section -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 400;">🎯 Savings Goals</h3>
+          <button onclick="showAddGoalModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;">+ New Goal</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+          <div id="goalsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 id="modalTitle">Success</h3>
+        <p id="modalMessage">Operation completed successfully</p>
+        <button class="modal-btn" onclick="closeModal()">OK</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="detailsModal" onclick="closeDetailsModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Transaction Details</h3>
+        <div id="detailsContent"></div>
+        <button class="modal-btn" onclick="closeDetailsModal()" style="margin-top: 1.5rem; width: 100%;">Close</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal" onclick="closeEditModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()" style="max-width: 600px; width: 90%;">
+        <h3 style="margin-bottom: 1.5rem;">Edit Transaction</h3>
+        <form id="editForm">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label>Date</label>
+              <input type="date" id="editDate" required style="border: 0.5px solid #ccc;">
+            </div>
+            <div>
+              <label>Amount</label>
+              <input type="number" id="editAmount" step="0.01" required style="border: 0.5px solid #ccc;">
+            </div>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Category</label>
+            <select id="editCategory" style="border: 0.5px solid #ccc;"></select>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Payment Method</label>
+            <select id="editPaymentMethod" style="border: 0.5px solid #ccc;"></select>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Tags</label>
+            <input type="text" id="editTags" placeholder="work, reimbursable" style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Notes</label>
+            <input type="text" id="editNotes" style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Changes
+            </button>
+            <button type="button" onclick="closeEditModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="editBillModal" onclick="closeEditBillModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Edit Bill Reminder</h3>
+        <form id="editBillForm">
+          <div style="margin-bottom: 1rem;">
+            <label>Bill Name</label>
+            <input type="text" id="editBillName" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Amount (₱) - Optional</label>
+            <input type="number" id="editBillAmount" step="0.01" style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Due Day</label>
+            <input type="number" id="editBillDue" min="1" max="31" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Changes
+            </button>
+            <button type="button" onclick="closeEditBillModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="duplicateModal" onclick="closeDuplicateModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1rem; font-size: 20px;">⚠️ Possible Duplicate</h3>
+        <p style="font-size: 14px; color: #666; margin-bottom: 1.5rem; line-height: 1.6;">
+          A similar transaction was found with the same amount on the same day:
+        </p>
+        <div id="duplicateInfo" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 14px;">
+          Loading...
+        </div>
+        <p style="font-size: 13px; color: #666; margin-bottom: 1rem;">
+          Is this a duplicate of the transaction above, or a new transaction?
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <button onclick="confirmDuplicate(true)" style="flex: 1; padding: 12px; background: #FFB700; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600;">
+            Yes, it's a duplicate - Cancel
+          </button>
+          <button onclick="confirmDuplicate(false)" style="flex: 1; padding: 12px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600;">
+            No, add it anyway
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="editIncomeModal" onclick="closeEditIncomeModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Edit Income</h3>
+        <form id="editIncomeForm">
+          <div style="margin-bottom: 1rem;">
+            <label>Date</label>
+            <input type="date" id="editIncomeDate" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Amount</label>
+            <input type="number" id="editIncomeAmount" step="0.01" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Source</label>
+            <input type="text" id="editIncomeSource" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Changes
+            </button>
+            <button type="button" onclick="closeEditIncomeModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="editHistoryModal" onclick="closeEditHistoryModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()" style="max-height: 80vh; overflow-y: auto;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 18px;">📝 Transaction Edit History</h3>
+        <div id="editHistoryContent" style="margin-bottom: 1.5rem;">
+          Loading...
+        </div>
+        <button onclick="closeEditHistoryModal()" style="width: 100%; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="checklistModal" onclick="closeChecklistModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">New Checklist Item</h3>
+        <form id="checklistModalForm">
+          <div style="margin-bottom: 1rem;">
+            <textarea id="checklistText" rows="4" placeholder="Write your checklist item..." required style="width: 100%; padding: 12px; border: 2px solid #8B998C; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 14px; resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save
+            </button>
+            <button type="button" onclick="closeChecklistModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="tobuyModal" onclick="closeTobuyModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Add To Buy Item</h3>
+        <form id="tobuyModalForm">
+          <div style="margin-bottom: 1rem;">
+            <input type="text" id="tobuyModalText" placeholder="What do you want to buy?" required style="width: 100%; padding: 12px; border: 2px solid #8B998C; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 14px;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Add
+            </button>
+            <button type="button" onclick="closeTobuyModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="noteModal" onclick="closeNoteModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+        <h3 id="noteModalTitle" style="margin-bottom: 1.5rem;">New Note</h3>
+        <form id="noteModalForm">
+          <div style="margin-bottom: 1rem;">
+            <textarea id="noteModalText" rows="6" placeholder="Write your note..." required style="width: 100%; padding: 12px; border: 2px solid #8B998C; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 14px; resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Note
+            </button>
+            <button type="button" onclick="closeNoteModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="noteDetailsModal" onclick="closeNoteDetailsModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Note Details</h3>
+        <div id="noteDetailsContent"></div>
+        <button class="modal-btn" onclick="closeNoteDetailsModal()" style="margin-top: 1.5rem; width: 100%;">Close</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="goalModal" onclick="closeGoalModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 id="goalModalTitle" style="margin-bottom: 1.5rem;">New Savings Goal</h3>
+        <form id="goalModalForm">
+          <div style="margin-bottom: 1rem;">
+            <label>Goal Name</label>
+            <input type="text" id="goalName" placeholder="e.g., Emergency Fund, Vacation" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Target Amount (₱)</label>
+            <input type="number" id="goalTarget" step="0.01" placeholder="50000" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Current Amount (₱)</label>
+            <input type="number" id="goalCurrent" step="0.01" placeholder="0" value="0" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Target Date</label>
+            <input type="date" id="goalDate" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Goal
+            </button>
+            <button type="button" onclick="closeGoalModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script>
+    const categories = {
+      'commute': { name: 'Commute', icon: '🚗', color: '#8B998C' },
+      'gas': { name: 'Gas', icon: '⛽', color: '#CEC8B2' },
+      'food': { name: 'Food', icon: '🍽️', color: '#626E6A' },
+      'drinks': { name: 'Drinks', icon: '☕', color: '#45504C' },
+      'shopping': { name: 'Shopping', icon: '🛍️', color: '#F1ECD9' },
+      'utilities': { name: 'Utilities', icon: '💡', color: '#8B998C' },
+      'healthcare': { name: 'Healthcare', icon: '🏥', color: '#626E6A' },
+      'business': { name: 'Business', icon: '💼', color: '#45504C' }
+    };
+
+    let creditCards = [
+      { name: 'Unionbank Platinum', statement: 7, due: 23, custom: false },
+      { name: 'Unionbank U', statement: 16, due: 2, custom: false },
+      { name: 'Maya Black', statement: 27, due: 16, custom: false },
+      { name: 'Atome', statement: 9, due: 18, custom: false },
+      { name: 'Lazpaylater', statement: 30, due: 16, custom: false },
+      { name: 'Tiktokpaylater', statement: 15, due: 1, custom: false },
+      { name: 'Eastwest Gold', statement: 3, due: 18, custom: false }
+    ];
+
+    const paymentMethods = ['Cash', 'Eastwest Gold', 'Maribank', 'Maya', 'Maya Black', 'Unionbank Platinum', 'Unionbank U', 'Atome', 'Tiktokpaylater', 'Lazpaylater'];
+
+    let transactions = [
+      { id: 1, date: '2026-05-15', category: 'food', amount: 500, paymentMethod: 'Maribank', notes: 'Dinner', tags: ['personal'], isRecurring: false, createdAt: new Date('2026-05-15T10:30:00').toISOString() },
+      { id: 2, date: '2026-05-14', category: 'commute', amount: 120, paymentMethod: 'Cash', notes: 'Grab', tags: ['work'], isRecurring: false, createdAt: new Date('2026-05-14T08:15:00').toISOString() },
+      { id: 3, date: '2026-05-10', category: 'utilities', amount: 2500, paymentMethod: 'Unionbank Platinum', notes: 'Electricity', tags: [], isRecurring: false, createdAt: new Date('2026-05-10T14:00:00').toISOString() },
+      { id: 4, date: '2026-04-15', category: 'food', amount: 350, paymentMethod: 'Maribank', notes: 'Lunch', tags: [], isRecurring: false, createdAt: new Date('2026-04-15T12:00:00').toISOString() }
+    ];
+
+    let recurringTemplates = [];
+    let income = [{ id: 1, date: '2026-05-01', amount: 35000, source: 'Salary', createdAt: new Date('2026-05-01T09:00:00').toISOString() }];
+    let billReminders = [];
+    let billStatements = []; // Stores paid bills and credit cards
+    let allTags = new Set(['personal', 'work']);
+    let ccAmounts = {}; // Format: { 'Card Name': { amount: 5000, paid: false, datePaid: null, noAmountDue: false } }
+    let notes = [];
+    let todos = [];
+    let tobuyItems = [];
+    let checklist = [];
+    let savingsGoals = [];
+    let editingCC = null;
+    let pendingTransaction = null;
+
+    function showDuplicateWarning(transaction, duplicate) {
+      pendingTransaction = transaction;
+      
+      document.getElementById('duplicateInfo').innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <strong>Found Transaction:</strong><br>
+          ${categories[duplicate.category].icon} ${categories[duplicate.category].name}<br>
+          <strong>Amount:</strong> ₱${duplicate.amount.toLocaleString('en-PH', {maximumFractionDigits: 2})}<br>
+          <strong>Date:</strong> ${new Date(duplicate.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}<br>
+          <strong>Payment:</strong> ${duplicate.paymentMethod}
+          ${duplicate.notes ? `<br><strong>Notes:</strong> ${duplicate.notes}` : ''}
+        </div>
+      `;
+      
+      document.getElementById('duplicateModal').classList.add('show');
+    }
+
+    function closeDuplicateModal() {
+      document.getElementById('duplicateModal').classList.remove('show');
+      pendingTransaction = null;
+    }
+
+    function confirmDuplicate(isDuplicate) {
+      if (isDuplicate) {
+        // User confirmed it's a duplicate - cancel
+        closeDuplicateModal();
+        showModal('Duplicate Cancelled', 'Transaction was not added to avoid duplicates.');
+      } else {
+        // User wants to add it anyway
+        closeDuplicateModal();
+        if (pendingTransaction) {
+          if (pendingTransaction.isRecurring) {
+            const frequency = document.getElementById('frequency').value;
+            recurringTemplates.push({ ...pendingTransaction, frequency, editHistory: [] });
+            showModal('Recurring Template', 'Recurring template saved! Use "Generate Recurring" button to add it to this month.');
+          } else {
+            transactions.unshift({ ...pendingTransaction, editHistory: [] });
+            showModal('Success', 'Expense added successfully!');
+          }
+          
+          document.getElementById('expenseForm').reset();
+          document.getElementById('date').valueAsDate = new Date();
+          document.getElementById('isRecurring').checked = false;
+          document.getElementById('recurringFields').style.display = 'none';
+          renderTagSuggestions();
+          updateDashboard();
+        }
+      }
+    }
+
+    function showEditHistory(transactionId) {
+      const transaction = transactions.find(t => t.id === transactionId);
+      if (!transaction) return;
+      
+      let historyHTML = `
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin: 0 0 1rem; font-weight: 600;">Current Values:</h4>
+          <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #8B998C;">
+            <div style="margin-bottom: 8px;"><strong>Amount:</strong> ₱${transaction.amount.toLocaleString('en-PH')}</div>
+            <div style="margin-bottom: 8px;"><strong>Category:</strong> ${categories[transaction.category] ? categories[transaction.category].name : transaction.category}</div>
+            <div style="margin-bottom: 8px;"><strong>Payment:</strong> ${transaction.paymentMethod}</div>
+            <div style="margin-bottom: 8px;"><strong>Date:</strong> ${new Date(transaction.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
+            ${transaction.notes ? `<div><strong>Notes:</strong> ${transaction.notes}</div>` : ''}
+          </div>
+        </div>
+      `;
+      
+      if (transaction.editHistory && transaction.editHistory.length > 0) {
+        historyHTML += `
+          <div>
+            <h4 style="margin: 0 0 1rem; font-weight: 600;">Edit History (${transaction.editHistory.length} edits):</h4>
+            ${transaction.editHistory.map((edit, index) => `
+              <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div style="font-size: 12px; color: #999; margin-bottom: 8px;">
+                  Edit #${transaction.editHistory.length - index} • ${new Date(edit.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                </div>
+                ${Object.entries(edit.changes).map(([field, change]) => `
+                  <div style="margin-bottom: 6px; font-size: 13px;">
+                    <strong>${field}:</strong> 
+                    <span style="color: #999; text-decoration: line-through;">${field === 'amount' ? '₱' + change.old.toLocaleString('en-PH') : change.old}</span>
+                    → 
+                    <strong style="color: #8B998C;">${field === 'amount' ? '₱' + change.new.toLocaleString('en-PH') : change.new}</strong>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        historyHTML += `
+          <div style="text-align: center; padding: 2rem; color: #999; font-style: italic;">
+            No edit history - this transaction hasn't been modified
+          </div>
+        `;
+      }
+      
+      document.getElementById('editHistoryContent').innerHTML = historyHTML;
+      document.getElementById('editHistoryModal').classList.add('show');
+    }
+
+    function closeEditHistoryModal() {
+      document.getElementById('editHistoryModal').classList.remove('show');
+    }
+
+    let selectedCategory = 'commute';
+    let categoryChart, paymentChart;
+    let filters = { month: 'all', category: 'all', payment: 'all', tag: 'all', search: '', recurring: 'all' };
+    let activeSubmenu = null;
+
+    // Initialize
+    document.getElementById('date').valueAsDate = new Date();
+    document.getElementById('incomeDate').valueAsDate = new Date();
+    document.getElementById('isRecurring').addEventListener('change', (e) => {
+      document.getElementById('recurringFields').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    renderCategoryButtons();
+    renderTagSuggestions();
+    renderNotes();
+    renderChecklist();
+    renderTobuy();
+    renderGoals();
+    updateDashboard();
+    checkRecurringReminder();
+    countActiveFilters();
+    setDateRange('thisMonth');
+    updateCurrentDate();
+    checkDueNotifications();
+
+    function updateCurrentDate() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('currentDateDisplay').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    function renderCategoryButtons() {
+      const container = document.getElementById('categoryButtons');
+      container.innerHTML = Object.entries(categories).map(([key, cat]) => `
+        <button type="button" class="category-btn ${key === selectedCategory ? 'active' : ''}" data-category="${key}" onclick="selectCategory('${key}')">
+          <span style="font-size: 20px;">${cat.icon}</span>
+          <span>${cat.name}</span>
+        </button>
+      `).join('');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategoryButtons();
+    }
+
+    function getDaySuffix(day) {
+      if (day >= 11 && day <= 13) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    }
+
+    function getDaysUntilDue(dueDay) {
+      const today = new Date();
+      const currentDay = today.getDate();
+      if (dueDay >= currentDay) {
+        return dueDay - currentDay;
+      } else {
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, dueDay);
+        return Math.ceil((nextMonth - today) / (1000 * 60 * 60 * 24));
+      }
+    }
+
+    function checkForDuplicates(newTransaction) {
+      const similar = transactions.find(t => 
+        t.date === newTransaction.date &&
+        Math.abs(t.amount - newTransaction.amount) <= 50 &&
+        t.id !== newTransaction.id
+      );
+      
+      return similar;
+    }
+
+    function getSpendingInsights() {
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const lastMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().substring(0, 7);
+      
+      const currentTransactions = transactions.filter(t => t.date.substring(0, 7) === currentMonth);
+      const lastTransactions = transactions.filter(t => t.date.substring(0, 7) === lastMonth);
+      
+      const insights = [];
+      
+      Object.keys(categories).forEach(cat => {
+        const currentSum = currentTransactions.filter(t => t.category === cat).reduce((sum, t) => sum + t.amount, 0);
+        const lastSum = lastTransactions.filter(t => t.category === cat).reduce((sum, t) => sum + t.amount, 0);
+        
+        if (lastSum > 0) {
+          const percentChange = ((currentSum - lastSum) / lastSum) * 100;
+          if (Math.abs(percentChange) > 20) {
+            insights.push({
+              category: categories[cat].name,
+              change: percentChange,
+              current: currentSum,
+              last: lastSum,
+              icon: categories[cat].icon
+            });
+          }
+        }
+      });
+      
+      return insights.sort((a, b) => Math.abs(b.change) - Math.abs(a.change)).slice(0, 3);
+    }
+
+    function getPatternAnalysis() {
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const monthTransactions = transactions.filter(t => t.date.substring(0, 7) === currentMonth);
+      
+      const analyses = [];
+      
+      if (monthTransactions.length === 0) return analyses;
+      
+      const paymentCounts = {};
+      monthTransactions.forEach(t => {
+        paymentCounts[t.paymentMethod] = (paymentCounts[t.paymentMethod] || 0) + 1;
+      });
+      const topPayment = Object.entries(paymentCounts).sort((a, b) => b[1] - a[1])[0];
+      if (topPayment) {
+        analyses.push(`You're using ${topPayment[0]} most frequently (${topPayment[1]} transactions this month). Consider maximizing rewards on this payment method.`);
+      }
+      
+      const categorySums = {};
+      monthTransactions.forEach(t => {
+        categorySums[t.category] = (categorySums[t.category] || 0) + t.amount;
+      });
+      const topCategory = Object.entries(categorySums).sort((a, b) => b[1] - a[1])[0];
+      if (topCategory) {
+        const percentage = (topCategory[1] / monthTransactions.reduce((sum, t) => sum + t.amount, 0)) * 100;
+        analyses.push(`${categories[topCategory[0]].name} accounts for ${percentage.toFixed(0)}% of your spending. This is your biggest expense category.`);
+      }
+      
+      const daysIntoMonth = new Date().getDate();
+      const monthExpenses = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      const dailyAverage = monthExpenses / daysIntoMonth;
+      const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+      const projectedSpending = dailyAverage * daysInMonth;
+      analyses.push(`At your current pace (₱${dailyAverage.toFixed(0)}/day), you're projected to spend ₱${projectedSpending.toLocaleString('en-PH', {maximumFractionDigits: 0})} this month.`);
+      
+      return analyses;
+    }
+
+    function renderInsights() {
+      const insights = getSpendingInsights();
+      const container = document.getElementById('insightsContainer');
+      
+      if (insights.length === 0) {
+        container.innerHTML = '<div style="font-size: 13px; color: #666; font-style: italic;">Not enough data yet. Keep tracking to see insights!</div>';
+        return;
+      }
+      
+      container.innerHTML = insights.map(insight => `
+        <div class="insight-card ${insight.change < 0 ? 'positive' : ''}">
+          <span style="font-size: 16px; margin-right: 6px;">${insight.icon}</span>
+          You spent <strong style="color: ${insight.change > 0 ? '#EF4444' : '#8B998C'};">
+            ${Math.abs(insight.change).toFixed(0)}% ${insight.change > 0 ? 'more' : 'less'}
+          </strong> on <strong>${insight.category}</strong> this month 
+          (₱${insight.current.toLocaleString('en-PH', {maximumFractionDigits: 0})} vs ₱${insight.last.toLocaleString('en-PH', {maximumFractionDigits: 0})} last month)
+        </div>
+      `).join('');
+    }
+
+    function renderPatterns() {
+      const patterns = getPatternAnalysis();
+      const container = document.getElementById('patternsContainer');
+      
+      container.innerHTML = patterns.map(pattern => `
+        <div class="pattern-card">${pattern}</div>
+      `).join('');
+    }
+
+    function showModal(title, message) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalMessage').textContent = message;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    function showTransactionDetails(id) {
+      const transaction = transactions.find(t => t.id === id) || income.find(i => i.id === id);
+      if (!transaction) return;
+
+      const isIncome = !transaction.category;
+      const createdDate = new Date(transaction.createdAt);
+      
+      let html = '';
+      
+      if (!isIncome) {
+        const cat = categories[transaction.category];
+        const tagsHtml = transaction.tags && transaction.tags.length > 0 ? transaction.tags.join(', ') : 'None';
+        
+        html = `
+          <div class="detail-row">
+            <span class="detail-label">Transaction ID</span>
+            <span class="detail-value">#${transaction.id}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Category</span>
+            <span class="detail-value">${cat.icon} ${cat.name}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Transaction Date</span>
+            <span class="detail-value">${new Date(transaction.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount</span>
+            <span class="detail-value">₱${transaction.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Payment Method</span>
+            <span class="detail-value">${transaction.paymentMethod}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Tags</span>
+            <span class="detail-value">${tagsHtml}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Notes</span>
+            <span class="detail-value">${transaction.notes || 'None'}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type</span>
+            <span class="detail-value">${transaction.isRecurring ? `Recurring (${transaction.frequency})` : 'Regular'}</span>
+          </div>
+        `;
+      } else {
+        html = `
+          <div class="detail-row">
+            <span class="detail-label">Income ID</span>
+            <span class="detail-value">#${transaction.id}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Source</span>
+            <span class="detail-value">💰 ${transaction.source}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Date</span>
+            <span class="detail-value">${new Date(transaction.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount</span>
+            <span class="detail-value">₱${transaction.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+          </div>
+        `;
+      }
+      
+      html += `
+        <div class="detail-row">
+          <span class="detail-label">Added On</span>
+          <span class="detail-value">${createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+        </div>
+        <div class="detail-row" style="border-bottom: none;">
+          <span class="detail-label">Added At</span>
+          <span class="detail-value">${createdDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+      
+      // Add View History button for expense transactions
+      if (transaction.category && transaction.category !== 'source') {
+        html += `
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e0e0e0;">
+            <button onclick="showEditHistory(${transaction.id})" style="width: 100%; padding: 10px 16px; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 14px;">
+              📝 View Edit History
+            </button>
+          </div>
+        `;
+      }
+      
+      document.getElementById('detailsContent').innerHTML = html;
+      document.getElementById('detailsModal').classList.add('show');
+    }
+
+    function closeDetailsModal() {
+      document.getElementById('detailsModal').classList.remove('show');
+    }
+
+    function showEditModal(id) {
+      const transaction = transactions.find(t => t.id === id);
+      if (!transaction) return;
+
+      editingTransaction = transaction;
+      
+      document.getElementById('editDate').value = transaction.date;
+      document.getElementById('editAmount').value = transaction.amount;
+      document.getElementById('editTags').value = transaction.tags ? transaction.tags.join(', ') : '';
+      document.getElementById('editNotes').value = transaction.notes || '';
+      
+      const categorySelect = document.getElementById('editCategory');
+      categorySelect.innerHTML = Object.entries(categories).map(([key, cat]) => 
+        `<option value="${key}" ${key === transaction.category ? 'selected' : ''}>${cat.name}</option>`
+      ).join('');
+      
+      const paymentSelect = document.getElementById('editPaymentMethod');
+      paymentSelect.innerHTML = paymentMethods.map(pm => 
+        `<option ${pm === transaction.paymentMethod ? 'selected' : ''}>${pm}</option>`
+      ).join('');
+      
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+      editingTransaction = null;
+    }
+
+    function showEditBillModal(id) {
+      const bill = billReminders.find(b => b.id === id);
+      if (!bill) return;
+
+      editingBill = bill;
+      
+      document.getElementById('editBillName').value = bill.name;
+      document.getElementById('editBillAmount').value = bill.amount !== null && bill.amount !== undefined ? bill.amount : '';
+      document.getElementById('editBillDue').value = bill.dueDate;
+      
+      document.getElementById('editBillModal').classList.add('show');
+    }
+
+    function closeEditBillModal() {
+      document.getElementById('editBillModal').classList.remove('show');
+      editingBill = null;
+    }
+
+    let editingIncome = null;
+
+    function showEditIncomeModal(id) {
+      const incomeRecord = income.find(i => i.id === id);
+      if (!incomeRecord) return;
+
+      editingIncome = incomeRecord;
+      
+      document.getElementById('editIncomeDate').value = incomeRecord.date;
+      document.getElementById('editIncomeAmount').value = incomeRecord.amount;
+      document.getElementById('editIncomeSource').value = incomeRecord.source;
+      
+      document.getElementById('editIncomeModal').classList.add('show');
+    }
+
+    function closeEditIncomeModal() {
+      document.getElementById('editIncomeModal').classList.remove('show');
+      editingIncome = null;
+    }
+
+    function addTagFromSuggestion(tag) {
+      const input = document.getElementById('tags');
+      const current = input.value.trim();
+      if (current) {
+        input.value = current + ', ' + tag;
+      } else {
+        input.value = tag;
+      }
+    }
+
+    function renderTagSuggestions() {
+      const container = document.getElementById('tagSuggestions');
+      if (allTags.size === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = Array.from(allTags).map(tag => 
+        `<span class="tag" style="display: inline-flex; align-items: center; gap: 4px;">
+          <span onclick="addTagFromSuggestion('${tag}')" style="cursor: pointer;">${tag}</span>
+          <button onclick="removeTag('${tag}'); event.stopPropagation();" style="background: none; border: none; color: #666; cursor: pointer; font-size: 14px; padding: 0; font-weight: bold;">×</button>
+        </span>`
+      ).join('');
+    }
+
+    function removeTag(tag) {
+      if (confirm(`Remove tag "${tag}" from suggestions?`)) {
+        allTags.delete(tag);
+        renderTagSuggestions();
+      }
+    }
+
+    function checkRecurringReminder() {
+      if (recurringTemplates.length === 0) {
+        document.getElementById('recurringReminder').style.display = 'none';
+        return;
+      }
+
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const hasGenerated = transactions.some(t => 
+        t.date.substring(0, 7) === currentMonth && t.isRecurring
+      );
+
+      document.getElementById('recurringReminder').style.display = hasGenerated ? 'none' : 'block';
+    }
+
+    function renderCreditCards() {
+      // Check for statement date resets
+      creditCards.forEach(cc => {
+        const ccData = ccAmounts[cc.name];
+        if (ccData && (ccData.paid || ccData.noAmountDue)) {
+          // Check if we should reset this card (next month's statement date has arrived)
+          const today = new Date();
+          const paidDate = ccData.datePaid ? new Date(ccData.datePaid) : null;
+          
+          if (paidDate) {
+            // Calculate next month's statement date
+            let nextStatementDate = new Date(paidDate);
+            nextStatementDate.setMonth(nextStatementDate.getMonth() + 1);
+            nextStatementDate.setDate(cc.statement);
+            
+            // If today is on or after next month's statement date, reset
+            if (today >= nextStatementDate) {
+              ccAmounts[cc.name] = {
+                amount: null,
+                paid: false,
+                noAmountDue: false,
+                datePaid: null
+              };
+            }
+          }
+        }
+      });
+      
+      // Separate cards by status
+      const paidCards = [];
+      const noAmountCards = [];
+      const unpaidCards = [];
+      
+      creditCards.forEach(cc => {
+        const ccData = ccAmounts[cc.name];
+        const daysUntilDue = getDaysUntilDue(cc.due);
+        
+        if (ccData && ccData.paid) {
+          paidCards.push({ ...cc, ...ccData, daysUntilDue });
+        } else if (ccData && ccData.noAmountDue) {
+          noAmountCards.push({ ...cc, ...ccData, daysUntilDue });
+        } else {
+          unpaidCards.push({ ...cc, daysUntilDue });
+        }
+      });
+      
+      // Sort unpaid by due date
+      unpaidCards.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+      
+      // Combine: unpaid first, then noAmount and paid at end
+      const sortedCards = [...unpaidCards, ...noAmountCards, ...paidCards];
+      
+      const container = document.getElementById('ccContainer');
+      container.innerHTML = sortedCards.map((cc, index) => {
+        // First card gets full width if unpaid
+        const isFirstUnpaid = index === 0 && unpaidCards.length > 0 && !cc.paid && !cc.noAmountDue;
+        return renderCreditCard(cc, isFirstUnpaid);
+      }).join('');
+    }
+
+    function renderCreditCard(cc, isFirstUnpaid = false) {
+      const ccData = ccAmounts[cc.name] || { amount: null, paid: false, noAmountDue: false };
+      const isDueSoon = cc.daysUntilDue <= 7 && !ccData.paid && !ccData.noAmountDue;
+      const isEditing = editingCC === cc.name;
+      const widthClass = isFirstUnpaid ? '100%' : 'calc(33.333% - 0.67rem)';
+      const hasAmount = ccData.amount !== null && ccData.amount !== undefined;
+      
+      return `
+        <div class="cc-card ${isDueSoon ? 'due-soon' : ''} ${ccData.paid ? 'paid' : ''} ${ccData.noAmountDue ? 'paid' : ''}" style="width: ${widthClass};">
+          <div class="cc-card-name">
+            <span>${cc.name}</span>
+            ${cc.custom ? `<button onclick="deleteCustomCC('${cc.name}')" style="padding: 2px 6px; font-size: 11px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 4px; cursor: pointer;">×</button>` : ''}
+          </div>
+          <div class="cc-card-dates">
+            <div class="cc-date-item">
+              <div class="cc-date-label">Statement</div>
+              <div class="cc-date-value">${cc.statement}${getDaySuffix(cc.statement)}</div>
+            </div>
+            <div class="cc-date-item">
+              <div class="cc-date-label">Due</div>
+              <div class="cc-date-value">${cc.due}${getDaySuffix(cc.due)}</div>
+            </div>
+          </div>
+          ${!ccData.noAmountDue ? `
+          <div style="margin-top: 8px;">
+            <div class="cc-date-label">Amount Due</div>
+            ${isEditing ? `
+              <input type="number" class="cc-amount-input" placeholder="Enter amount (can be 0)" step="0.01" min="0"
+                     id="ccInput-${cc.name}" autofocus
+                     onkeypress="if(event.key==='Enter'){saveCCAmount('${cc.name}', this.value)}" 
+                     onblur="editingCC = null; renderCreditCards();">
+            ` : hasAmount ? `
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="cc-amount-display">₱${parseFloat(ccData.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+                <button onclick="startEditCC('${cc.name}')" style="padding: 4px 10px; font-size: 12px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500;">
+                  Edit
+                </button>
+                <button onclick="removeCCAmount('${cc.name}')" style="padding: 4px 10px; font-size: 12px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500;">
+                  Remove
+                </button>
+              </div>
+            ` : `
+              <input type="number" class="cc-amount-input" placeholder="Enter amount (can be 0)" step="0.01" min="0"
+                     onkeypress="if(event.key==='Enter'){saveCCAmount('${cc.name}', this.value)}">
+            `}
+          </div>
+          ${hasAmount ? `
+            <div class="checkbox-container" style="margin-top: 8px;">
+              <input type="checkbox" id="ccPaid-${cc.name}" ${ccData.paid ? 'checked' : ''} onchange="toggleCCPaid('${cc.name}', this.checked)">
+              <label style="margin: 0; font-size: 13px;">Paid</label>
+            </div>
+          ` : ''}
+          ` : ''}
+          ${!hasAmount ? `
+          <div class="checkbox-container" style="margin-top: 8px;">
+            <input type="checkbox" id="ccNoAmount-${cc.name}" ${ccData.noAmountDue ? 'checked' : ''} onchange="toggleNoAmountDue('${cc.name}', this.checked)">
+            <label style="margin: 0; font-size: 13px;">No amount due</label>
+          </div>
+          ` : ''}
+          ${isDueSoon ? `<div class="due-badge">Due in ${cc.daysUntilDue} day${cc.daysUntilDue === 1 ? '' : 's'}</div>` : ''}
+          ${ccData.paid ? `<div class="paid-badge">✓ Paid</div>` : ''}
+          ${ccData.noAmountDue ? `<div class="paid-badge" style="background: #8B998C;">No Amount</div>` : ''}
+        </div>
+      `;
+    }
+
+    function removeCCAmount(name) {
+      if (confirm('Remove the saved amount?')) {
+        ccAmounts[name] = { amount: null, paid: false, noAmountDue: ccAmounts[name]?.noAmountDue || false, datePaid: null };
+        renderCreditCards();
+      }
+    }
+
+    function toggleNoAmountDue(name, isChecked) {
+      if (!ccAmounts[name]) {
+        ccAmounts[name] = { amount: null, paid: false, noAmountDue: false, datePaid: null };
+      }
+      ccAmounts[name].noAmountDue = isChecked;
+      if (isChecked) {
+        // Clear amount when no amount due is checked
+        ccAmounts[name].amount = null;
+        ccAmounts[name].paid = false;
+      }
+      renderCreditCards();
+    }
+
+    function startEditCC(name) {
+      editingCC = name;
+      renderCreditCards();
+      setTimeout(() => {
+        const input = document.getElementById(`ccInput-${name}`);
+        if (input) input.focus();
+      }, 100);
+    }
+
+    function saveCCAmount(name, value) {
+      const amount = parseFloat(value);
+      if (value === '' || (amount >= 0)) {
+        ccAmounts[name] = { 
+          amount: amount >= 0 ? amount : 0, 
+          paid: ccAmounts[name]?.paid || false,
+          datePaid: ccAmounts[name]?.datePaid || null
+        };
+      }
+      editingCC = null;
+      renderCreditCards();
+    }
+
+    function toggleCCPaid(name, isPaid) {
+      if (!ccAmounts[name]) return;
+      
+      ccAmounts[name].paid = isPaid;
+      ccAmounts[name].datePaid = isPaid ? new Date().toISOString() : null;
+      
+      if (isPaid) {
+        // Add to bill statements
+        const cc = creditCards.find(c => c.name === name);
+        billStatements.push({
+          id: Date.now(),
+          type: 'Credit Card',
+          name: name,
+          amount: ccAmounts[name].amount,
+          datePaid: ccAmounts[name].datePaid,
+          dueDay: cc.due
+        });
+      } else {
+        // Remove from bill statements if unmarked
+        billStatements = billStatements.filter(s => !(s.type === 'Credit Card' && s.name === name && s.datePaid === ccAmounts[name].datePaid));
+      }
+      
+      renderCreditCards();
+      renderBillStatements();
+    }
+
+    function deleteCustomCC(name) {
+      if (confirm(`Delete ${name}?`)) {
+        creditCards = creditCards.filter(cc => cc.name !== name);
+        delete ccAmounts[name];
+        renderCreditCards();
+      }
+    }
+
+    function renderBillReminders() {
+      const container = document.getElementById('billRemindersContainer');
+      
+      if (billReminders.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 3rem; color: #666; font-style: italic; grid-column: 1 / -1;">No bill reminders yet. Add one above to get started!</div>';
+        return;
+      }
+      
+      container.innerHTML = billReminders.map(reminder => {
+        const daysUntil = getDaysUntilDue(reminder.dueDate);
+        const isDueSoon = daysUntil <= 7;
+        const isEditingAmount = editingCC === `bill-${reminder.id}`;
+        
+        return `
+          <div style="background: ${isDueSoon ? 'rgba(239, 68, 68, 0.05)' : '#f5f5f5'}; border: 1px solid ${isDueSoon ? '#EF4444' : '#e0e0e0'}; border-radius: 8px; padding: 1rem;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 8px; font-family: 'Poppins', sans-serif;">${reminder.name}</div>
+            <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-family: 'Poppins', sans-serif;">
+              Due: <strong>${reminder.dueDate}${getDaySuffix(reminder.dueDate)} of each month</strong>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-family: 'Poppins', sans-serif; text-transform: uppercase; font-weight: 600;">Amount Due</div>
+              ${isEditingAmount ? `
+                <input type="number" class="cc-amount-input" placeholder="Enter amount (can be 0)" step="0.01" min="0"
+                       id="billAmountInput-${reminder.id}" autofocus
+                       onkeypress="if(event.key==='Enter'){saveBillAmount(${reminder.id}, this.value)}" 
+                       onblur="editingCC = null; renderBillReminders();">
+              ` : reminder.amount !== null && reminder.amount !== undefined ? `
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div class="cc-amount-display">₱${parseFloat(reminder.amount).toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+                  <button onclick="startEditBillAmount(${reminder.id})" style="padding: 4px 10px; font-size: 12px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500;">
+                    Edit
+                  </button>
+                </div>
+              ` : `
+                <input type="number" class="cc-amount-input" placeholder="Enter amount (can be 0)" step="0.01" min="0"
+                       onkeypress="if(event.key==='Enter'){saveBillAmount(${reminder.id}, this.value)}">
+              `}
+            </div>
+            ${isDueSoon ? `<div class="due-badge">Due in ${daysUntil} day${daysUntil === 1 ? '' : 's'}</div>` : ''}
+            <div style="display: flex; gap: 4px; margin-top: 8px;">
+              <button onclick="showEditBillModal(${reminder.id})" class="edit-btn">Edit</button>
+              ${reminder.amount !== null && reminder.amount !== undefined ? `<button onclick="markBillPaid(${reminder.id})" class="paid-btn">Paid</button>` : ''}
+              <button onclick="deleteBillReminder(${reminder.id})" class="delete-btn">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startEditBillAmount(id) {
+      editingCC = `bill-${id}`;
+      renderBillReminders();
+      setTimeout(() => {
+        const input = document.getElementById(`billAmountInput-${id}`);
+        if (input) input.focus();
+      }, 100);
+    }
+
+    function saveBillAmount(id, value) {
+      const amount = parseFloat(value);
+      if (value === '' || (amount >= 0)) {
+        const bill = billReminders.find(b => b.id === id);
+        if (bill) {
+          bill.amount = amount >= 0 ? amount : 0;
+        }
+      }
+      editingCC = null;
+      renderBillReminders();
+    }
+
+    function renderNotes() {
+      const container = document.getElementById('notesList');
+      if (notes.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No notes yet. Click "+ New Note" to add one!</p>';
+        return;
+      }
+      container.innerHTML = notes.map(note => {
+        const createdDate = new Date(note.createdAt);
+        const editCount = note.editHistory ? note.editHistory.length : 0;
+        
+        return `
+          <div style="background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                <div style="font-size: 11px; color: #666; margin-bottom: 6px;">
+                  ${createdDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${createdDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  ${editCount > 0 ? ` • Edited ${editCount} time${editCount > 1 ? 's' : ''}` : ''}
+                </div>
+                <div style="font-size: 14px; white-space: pre-wrap;">${note.text}</div>
+              </div>
+              <div class="dropdown" style="position: relative;">
+                <button onclick="toggleNoteMenu(${note.id})" style="background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 8px; color: #666;">⋯</button>
+                <div id="noteMenu-${note.id}" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; min-width: 120px; margin-top: 4px;">
+                  <button onclick="showEditNoteModal(${note.id})" style="width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; color: #333;">✏️ Edit</button>
+                  <button onclick="showNoteDetails(${note.id})" style="width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; color: #333;">📋 Details</button>
+                  <button onclick="deleteNote(${note.id})" style="width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; color: #EF4444;">🗑️ Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    let activeNoteMenu = null;
+
+    function toggleNoteMenu(id) {
+      const menu = document.getElementById(`noteMenu-${id}`);
+      
+      // Close other menus
+      if (activeNoteMenu && activeNoteMenu !== id) {
+        const prevMenu = document.getElementById(`noteMenu-${activeNoteMenu}`);
+        if (prevMenu) prevMenu.style.display = 'none';
+      }
+      
+      // Toggle current menu
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+      activeNoteMenu = menu.style.display === 'block' ? id : null;
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) {
+        if (activeNoteMenu) {
+          const menu = document.getElementById(`noteMenu-${activeNoteMenu}`);
+          if (menu) menu.style.display = 'none';
+          activeNoteMenu = null;
+        }
+      }
+    });
+
+    let editingNote = null;
+
+    function showAddNoteModal() {
+      editingNote = null;
+      document.getElementById('noteModalTitle').textContent = 'New Note';
+      document.getElementById('noteModalText').value = '';
+      document.getElementById('noteModal').classList.add('show');
+    }
+
+    function showEditNoteModal(id) {
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+      
+      editingNote = note;
+      document.getElementById('noteModalTitle').textContent = 'Edit Note';
+      document.getElementById('noteModalText').value = note.text;
+      document.getElementById('noteModal').classList.add('show');
+      
+      // Close the menu
+      if (activeNoteMenu) {
+        const menu = document.getElementById(`noteMenu-${activeNoteMenu}`);
+        if (menu) menu.style.display = 'none';
+        activeNoteMenu = null;
+      }
+    }
+
+    function closeNoteModal() {
+      document.getElementById('noteModal').classList.remove('show');
+      editingNote = null;
+    }
+
+    function showNoteDetails(id) {
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+      
+      const createdDate = new Date(note.createdAt);
+      let html = `
+        <div class="detail-row">
+          <span class="detail-label">Created</span>
+          <span class="detail-value">${createdDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at ${createdDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+      
+      if (note.editHistory && note.editHistory.length > 0) {
+        html += `
+          <div class="detail-row" style="border-bottom: none;">
+            <span class="detail-label">Edit History</span>
+            <span class="detail-value"></span>
+          </div>
+        `;
+        note.editHistory.forEach((edit, index) => {
+          const editDate = new Date(edit.timestamp);
+          html += `
+            <div style="padding: 8px 0; border-bottom: 0.5px solid #CEC8B2; font-size: 12px; color: #666;">
+              Edit ${index + 1}: ${editDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at ${editDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          `;
+        });
+      }
+      
+      document.getElementById('noteDetailsContent').innerHTML = html;
+      document.getElementById('noteDetailsModal').classList.add('show');
+      
+      // Close the menu
+      if (activeNoteMenu) {
+        const menu = document.getElementById(`noteMenu-${activeNoteMenu}`);
+        if (menu) menu.style.display = 'none';
+        activeNoteMenu = null;
+      }
+    }
+
+    function closeNoteDetailsModal() {
+      document.getElementById('noteDetailsModal').classList.remove('show');
+    }
+
+    // Checklist Functions
+    function showAddChecklistModal() {
+      document.getElementById('checklistText').value = '';
+      document.getElementById('checklistModal').classList.add('show');
+    }
+
+    function closeChecklistModal() {
+      document.getElementById('checklistModal').classList.remove('show');
+    }
+
+    function showAddTobuyModal() {
+      document.getElementById('tobuyModal').classList.add('show');
+      document.getElementById('tobuyModalText').focus();
+    }
+
+    function closeTobuyModal() {
+      document.getElementById('tobuyModal').classList.remove('show');
+      document.getElementById('tobuyModalForm').reset();
+    }
+
+    function renderChecklist() {
+      const container = document.getElementById('checklistList');
+      if (checklist.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No items yet. Click "+ New" to add!</p>';
+        return;
+      }
+      
+      // Sort: unchecked first, then checked
+      const sortedItems = [...checklist].sort((a, b) => {
+        if (a.completed === b.completed) return 0;
+        return a.completed ? 1 : -1;
+      });
+      
+      container.innerHTML = sortedItems.map(item => `
+        <div style="background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px;">
+          <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleChecklist(${item.id})" style="width: 18px; height: 18px; cursor: pointer;">
+          <div style="flex: 1; font-size: 14px; ${item.completed ? 'text-decoration: line-through; color: #999;' : ''}">${item.text}</div>
+          <button onclick="deleteChecklistItem(${item.id})" class="delete-btn">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function toggleChecklist(id) {
+      const item = checklist.find(i => i.id === id);
+      if (item) {
+        item.completed = !item.completed;
+        renderChecklist();
+      }
+    }
+
+    function deleteChecklistItem(id) {
+      if (confirm('Delete this item?')) {
+        checklist = checklist.filter(i => i.id !== id);
+        renderChecklist();
+      }
+    }
+    let editingGoal = null;
+
+    function showAddGoalModal() {
+      editingGoal = null;
+      document.getElementById('goalModalTitle').textContent = 'New Savings Goal';
+      document.getElementById('goalName').value = '';
+      document.getElementById('goalTarget').value = '';
+      document.getElementById('goalCurrent').value = '0';
+      document.getElementById('goalDate').value = '';
+      document.getElementById('goalModal').classList.add('show');
+    }
+
+    function showEditGoalModal(id) {
+      const goal = savingsGoals.find(g => g.id === id);
+      if (!goal) return;
+      
+      editingGoal = goal;
+      document.getElementById('goalModalTitle').textContent = 'Edit Savings Goal';
+      document.getElementById('goalName').value = goal.name;
+      document.getElementById('goalTarget').value = goal.target;
+      document.getElementById('goalCurrent').value = goal.current;
+      document.getElementById('goalDate').value = goal.date;
+      document.getElementById('goalModal').classList.add('show');
+    }
+
+    function closeGoalModal() {
+      document.getElementById('goalModal').classList.remove('show');
+      editingGoal = null;
+    }
+
+    function renderGoals() {
+      const container = document.getElementById('goalsList');
+      if (savingsGoals.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No savings goals yet. Click "+ New Goal" to add one!</p>';
+        return;
+      }
+      
+      container.innerHTML = savingsGoals.map(goal => {
+        const progress = (goal.current / goal.target) * 100;
+        const targetDate = new Date(goal.date);
+        const today = new Date();
+        const daysLeft = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+        const monthlyNeeded = daysLeft > 0 ? (goal.target - goal.current) / (daysLeft / 30) : 0;
+        
+        return `
+          <div style="background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="flex: 1;">
+                <div style="font-size: 15px; font-weight: 600; margin-bottom: 4px;">${goal.name}</div>
+                <div style="font-size: 12px; color: #666;">₱${goal.current.toLocaleString('en-PH', {maximumFractionDigits: 0})} / ₱${goal.target.toLocaleString('en-PH', {maximumFractionDigits: 0})}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 18px; font-weight: 600; color: ${progress >= 100 ? '#10b981' : '#8B998C'};">${progress.toFixed(0)}%</div>
+              </div>
+            </div>
+            
+            <div style="background: #e0e0e0; height: 8px; border-radius: 4px; margin-bottom: 8px; overflow: hidden;">
+              <div style="background: ${progress >= 100 ? '#10b981' : 'linear-gradient(135deg, #8B998C 0%, #626E6A 100%)'}; height: 100%; width: ${Math.min(progress, 100)}%; transition: width 0.3s;"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 8px;">
+              <span>${daysLeft > 0 ? `${daysLeft} days left` : 'Overdue'}</span>
+              <span>Target: ${targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </div>
+            
+            ${daysLeft > 0 && progress < 100 ? `
+              <div style="font-size: 11px; color: #666; background: rgba(139, 153, 140, 0.1); padding: 6px; border-radius: 4px; margin-bottom: 8px;">
+                💡 Save ₱${monthlyNeeded.toLocaleString('en-PH', {maximumFractionDigits: 0})}/month to reach goal
+              </div>
+            ` : ''}
+            
+            <div style="display: flex; gap: 4px;">
+              <button onclick="updateGoalProgress(${goal.id})" class="edit-btn" style="flex: 1;">Update</button>
+              <button onclick="showEditGoalModal(${goal.id})" class="edit-btn">Edit</button>
+              <button onclick="deleteGoal(${goal.id})" class="delete-btn">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateGoalProgress(id) {
+      const goal = savingsGoals.find(g => g.id === id);
+      if (!goal) return;
+      
+      const amount = prompt(`Update current amount for "${goal.name}"\nCurrent: ₱${goal.current.toLocaleString('en-PH')}`, goal.current);
+      if (amount !== null && !isNaN(amount)) {
+        goal.current = parseFloat(amount);
+        renderGoals();
+        
+        // Check if goal reached
+        if (goal.current >= goal.target) {
+          showModal('🎉 Goal Reached!', `Congratulations! You've reached your savings goal for "${goal.name}"!`);
+        }
+      }
+    }
+
+    function deleteGoal(id) {
+      if (confirm('Delete this savings goal?')) {
+        savingsGoals = savingsGoals.filter(g => g.id !== id);
+        renderGoals();
+      }
+    }
+
+    // Category Management Functions
+    function toggleCategoryManager() {
+      const manager = document.getElementById('categoryManager');
+      manager.style.display = manager.style.display === 'none' ? 'block' : 'none';
+      if (manager.style.display === 'block') {
+        renderCategoryList();
+      }
+    }
+
+    function renderCategoryList() {
+      const container = document.getElementById('categoryList');
+      container.innerHTML = Object.entries(categories).map(([key, cat]) => `
+        <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 24px;">${cat.icon}</span>
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 600;">${cat.name}</div>
+              <div style="font-size: 12px; color: #666;">Key: ${key}</div>
+            </div>
+            <div style="width: 20px; height: 20px; background: ${cat.color}; border-radius: 4px; border: 1px solid #ccc;"></div>
+          </div>
+          <button onclick="deleteCategory('${key}')" class="delete-btn" style="width: 100%;">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteCategory(key) {
+      if (Object.keys(categories).length <= 3) {
+        alert('You must have at least 3 categories!');
+        return;
+      }
+      
+      if (confirm(`Delete "${categories[key].name}" category?`)) {
+        // Update any transactions using this category to "commute"
+        transactions.forEach(t => {
+          if (t.category === key) t.category = 'commute';
+        });
+        
+        delete categories[key];
+        renderCategoryButtons();
+        renderCategoryList();
+        showModal('Success', 'Category deleted successfully!');
+      }
+    }
+
+    // Smart Notifications - Check bills/CC due in 1 day
+    function checkDueNotifications() {
+      const notifications = [];
+      
+      // Check credit cards
+      creditCards.forEach(cc => {
+        const ccData = ccAmounts[cc.name];
+        const daysUntil = getDaysUntilDue(cc.due);
+        
+        if (daysUntil === 1 && ccData && ccData.amount > 0 && !ccData.paid && !ccData.noAmountDue) {
+          notifications.push({
+            type: 'Credit Card',
+            name: cc.name,
+            amount: ccData.amount,
+            daysUntil: 1
+          });
+        }
+      });
+      
+      // Check bill reminders
+      billReminders.forEach(bill => {
+        const daysUntil = getDaysUntilDue(bill.dueDate);
+        
+        if (daysUntil === 1 && bill.amount > 0) {
+          notifications.push({
+            type: 'Bill',
+            name: bill.name,
+            amount: bill.amount,
+            daysUntil: 1
+          });
+        }
+      });
+      
+      // Show notifications
+      if (notifications.length > 0) {
+        let message = 'Due tomorrow:\n\n';
+        notifications.forEach(n => {
+          message += `• ${n.name}: ₱${n.amount.toLocaleString('en-PH', {maximumFractionDigits: 0})}\n`;
+        });
+        showModal('⚠️ Payment Due Tomorrow', message);
+      }
+    }
+
+    function renderTobuy() {
+      const container = document.getElementById('tobuyList');
+      if (tobuyItems.length === 0) {
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #666; font-style: italic;">No items yet. Add one above!</p>';
+        return;
+      }
+      
+      // Sort: unchecked first, then checked
+      const sortedItems = [...tobuyItems].sort((a, b) => {
+        if (a.completed === b.completed) return 0;
+        return a.completed ? 1 : -1;
+      });
+      
+      container.innerHTML = sortedItems.map(item => `
+        <div style="background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px;">
+          <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTobuy(${item.id})" style="width: 18px; height: 18px; cursor: pointer;">
+          <div style="flex: 1; font-size: 14px; ${item.completed ? 'text-decoration: line-through; color: #999;' : ''}">${item.text}</div>
+          <button onclick="deleteTobuy(${item.id})" class="delete-btn">Delete</button>
+        </div>
+      `).join('');
+    }
+
+    function deleteNote(id) {
+      if (confirm('Delete this note?')) {
+        notes = notes.filter(n => n.id !== id);
+        renderNotes();
+      }
+    }
+
+    function deleteTodo(id) {
+      todos = todos.filter(t => t.id !== id);
+      renderTodos();
+    }
+
+    function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (todo) {
+        todo.completed = !todo.completed;
+        renderTodos();
+      }
+    }
+
+    function deleteTobuy(id) {
+      tobuyItems = tobuyItems.filter(i => i.id !== id);
+      renderTobuy();
+    }
+
+    function toggleTobuy(id) {
+      const item = tobuyItems.find(i => i.id === id);
+      if (item) {
+        item.completed = !item.completed;
+        renderTobuy();
+      }
+    }
+
+    let selectedQuickCategory = 'commute';
+
+    function renderQuickCategoryButtons() {
+      const container = document.getElementById('quickCategoryButtons');
+      container.innerHTML = Object.entries(categories).map(([key, cat]) => `
+        <button type="button" class="category-btn ${key === selectedQuickCategory ? 'active' : ''}" data-category="${key}" onclick="selectQuickCategory('${key}')" style="padding: 8px; font-size: 11px;">
+          <span style="font-size: 16px;">${cat.icon}</span>
+          <span>${cat.name}</span>
+        </button>
+      `).join('');
+    }
+
+    function selectQuickCategory(cat) {
+      selectedQuickCategory = cat;
+      renderQuickCategoryButtons();
+    }
+
+    function deleteBillReminder(id) {
+      if (confirm('Delete this bill reminder?')) {
+        billReminders = billReminders.filter(r => r.id !== id);
+        renderBillReminders();
+      }
+    }
+
+    function markBillPaid(id) {
+      const bill = billReminders.find(b => b.id === id);
+      if (!bill) return;
+      
+      if (bill.amount === null || bill.amount === undefined) {
+        showModal('Amount Required', 'Please set the bill amount before marking as paid.');
+        return;
+      }
+      
+      // Add to bill statements
+      billStatements.push({
+        id: Date.now(),
+        type: 'Bill',
+        name: bill.name,
+        amount: bill.amount,
+        datePaid: new Date().toISOString(),
+        dueDay: bill.dueDate
+      });
+      
+      showModal('Bill Marked as Paid', `${bill.name} has been marked as paid and added to Bill Statements.`);
+      renderBillStatements();
+    }
+
+    function renderBillStatements() {
+      const container = document.getElementById('billStatementsList');
+      const searchTerm = document.getElementById('billStatementSearch').value.toLowerCase();
+      
+      const filtered = billStatements.filter(s => 
+        s.name.toLowerCase().includes(searchTerm) ||
+        s.type.toLowerCase().includes(searchTerm)
+      ).sort((a, b) => new Date(b.datePaid) - new Date(a.datePaid));
+      
+      const total = filtered.reduce((sum, s) => sum + s.amount, 0);
+      
+      document.getElementById('billStatementCount').textContent = filtered.length;
+      document.getElementById('billStatementTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
+      
+      if (filtered.length === 0) {
+        container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #666;">No bill statements yet. Mark bills or credit cards as paid to see them here.</td></tr>';
+        return;
+      }
+      
+      container.innerHTML = filtered.map(s => `
+        <tr class="paid-row">
+          <td>${new Date(s.datePaid).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+          <td>${s.type}</td>
+          <td>${s.name}</td>
+          <td style="font-weight: 600; color: #10b981;">₱${s.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+          <td style="text-align: right;">
+            <button onclick="unpayBillStatement(${s.id})" class="edit-btn">Mark Unpaid</button>
+            <button onclick="deleteBillStatement(${s.id})" class="delete-btn">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function unpayBillStatement(id) {
+      const statement = billStatements.find(s => s.id === id);
+      if (!statement) return;
+      
+      if (statement.type === 'Credit Card') {
+        // Unmark the credit card as paid
+        if (ccAmounts[statement.name]) {
+          ccAmounts[statement.name].paid = false;
+          ccAmounts[statement.name].datePaid = null;
+        }
+        renderCreditCards();
+      }
+      
+      // Remove from statements
+      billStatements = billStatements.filter(s => s.id !== id);
+      renderBillStatements();
+      showModal('Unmarked', 'Payment has been unmarked and removed from statements.');
+    }
+
+    function deleteBillStatement(id) {
+      if (confirm('Delete this bill statement?')) {
+        billStatements = billStatements.filter(s => s.id !== id);
+        renderBillStatements();
+      }
+    }
+
+    function toggleHistoryView(view) {
+      document.getElementById('transactionsView').style.display = 'none';
+      document.getElementById('incomeView').style.display = 'none';
+      document.getElementById('billStatementsView').style.display = 'none';
+      document.getElementById('transactionsToggle').classList.remove('active');
+      document.getElementById('incomeToggle').classList.remove('active');
+      document.getElementById('billStatementsToggle').classList.remove('active');
+      
+      if (view === 'transactions') {
+        document.getElementById('transactionsView').style.display = 'block';
+        document.getElementById('transactionsToggle').classList.add('active');
+      } else if (view === 'income') {
+        document.getElementById('incomeView').style.display = 'block';
+        document.getElementById('incomeToggle').classList.add('active');
+        renderIncome();
+      } else if (view === 'billStatements') {
+        document.getElementById('billStatementsView').style.display = 'block';
+        document.getElementById('billStatementsToggle').classList.add('active');
+        renderBillStatements();
+      }
+    }
+
+    function toggleFilterMenu() {
+      const menu = document.getElementById('filterMenu');
+      menu.classList.toggle('open');
+      if (!menu.classList.contains('open')) {
+        activeSubmenu = null;
+        document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+      }
+    }
+
+    function toggleSubmenu(type) {
+      document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+      if (activeSubmenu === type) {
+        activeSubmenu = null;
+      } else {
+        activeSubmenu = type;
+        document.getElementById(`submenu-${type}`).classList.add('open');
+        populateSubmenu(type);
+      }
+    }
+
+    function populateSubmenu(type) {
+      const submenu = document.getElementById(`submenu-${type}`);
+      let options = [];
+      
+      if (type === 'month') {
+        const months = [...new Set(transactions.map(t => t.date.substring(0, 7)))].sort().reverse();
+        options = ['all', ...months].map(m => ({
+          value: m,
+          label: m === 'all' ? 'All' : new Date(m + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
+          active: filters.month === m
+        }));
+      } else if (type === 'category') {
+        options = ['all', ...Object.keys(categories)].map(c => ({
+          value: c,
+          label: c === 'all' ? 'All' : categories[c].name,
+          active: filters.category === c
+        }));
+      } else if (type === 'payment') {
+        options = ['all', ...paymentMethods].map(p => ({
+          value: p,
+          label: p === 'all' ? 'All' : p,
+          active: filters.payment === p
+        }));
+      } else if (type === 'tag') {
+        const tags = Array.from(allTags).sort();
+        options = ['all', ...tags].map(t => ({
+          value: t,
+          label: t === 'all' ? 'All' : t,
+          active: filters.tag === t
+        }));
+      } else if (type === 'type') {
+        options = ['all', 'recurring', 'regular'].map(r => ({
+          value: r,
+          label: { all: 'All', recurring: 'Recurring', regular: 'Regular' }[r],
+          active: filters.recurring === r
+        }));
+      }
+      
+      submenu.innerHTML = options.map(opt => 
+        `<div class="filter-option${opt.active ? ' active' : ''}" onclick="setFilter('${type}', '${opt.value}')">${opt.label}</div>`
+      ).join('');
+    }
+
+    function setFilter(type, value) {
+      const typeMap = { month: 'month', category: 'category', payment: 'payment', tag: 'tag', type: 'recurring' };
+      filters[typeMap[type]] = value;
+      countActiveFilters();
+      applyFilters();
+      document.getElementById('filterMenu').classList.remove('open');
+      activeSubmenu = null;
+      document.querySelectorAll('.filter-submenu').forEach(s => s.classList.remove('open'));
+    }
+
+    function removeFilters() {
+      filters = { month: 'all', category: 'all', payment: 'all', tag: 'all', search: '', recurring: 'all' };
+      document.getElementById('searchBox').value = '';
+      countActiveFilters();
+      applyFilters();
+    }
+
+    function countActiveFilters() {
+      let count = 0;
+      if (filters.month !== 'all') count++;
+      if (filters.category !== 'all') count++;
+      if (filters.payment !== 'all') count++;
+      if (filters.tag !== 'all') count++;
+      if (filters.recurring !== 'all') count++;
+      document.getElementById('activeFilterCount').textContent = count;
+    }
+
+    function applyFilters() {
+      filters.search = document.getElementById('searchBox').value.toLowerCase();
+      renderTransactions();
+    }
+
+    function getFilteredTransactions(filterSet = filters) {
+      return transactions.filter(t => {
+        const matchMonth = !filterSet.month || filterSet.month === 'all' || t.date.substring(0, 7) === filterSet.month;
+        const matchCategory = !filterSet.category || filterSet.category === 'all' || t.category === filterSet.category;
+        const matchPayment = !filterSet.payment || filterSet.payment === 'all' || t.paymentMethod === filterSet.payment;
+        const matchTag = !filterSet.tag || filterSet.tag === 'all' || (t.tags && t.tags.includes(filterSet.tag));
+        const matchSearch = !filterSet.search || (t.notes && t.notes.toLowerCase().includes(filterSet.search));
+        const matchDateRange = !filterSet.startDate || !filterSet.endDate || (t.date >= filterSet.startDate && t.date <= filterSet.endDate);
+        const matchRecurring = !filterSet.recurring || filterSet.recurring === 'all' || 
+          (filterSet.recurring === 'recurring' && t.isRecurring) ||
+          (filterSet.recurring === 'regular' && !t.isRecurring);
+        return matchMonth && matchCategory && matchPayment && matchTag && matchSearch && matchDateRange && matchRecurring;
+      }).sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function filterByTag(tag) {
+      filters.tag = tag;
+      countActiveFilters();
+      applyFilters();
+    }
+
+    function renderTransactions() {
+      const filtered = getFilteredTransactions();
+      const tbody = document.getElementById('transactionsList');
+      const total = filtered.reduce((sum, t) => sum + t.amount, 0);
+      
+      document.getElementById('filteredCount').textContent = filtered.length;
+      document.getElementById('filteredTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #666;">No transactions match your filters</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => {
+        const cat = categories[t.category];
+        const rowClass = t.isRecurring ? 'recurring-row' : '';
+        const notesHtml = t.notes ? `<span style="font-style: italic; font-size: 12px;">${t.notes}</span>` : '';
+        const tagsHtml = t.tags && t.tags.length > 0 ? t.tags.map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('') : '';
+        const notesAndTags = notesHtml + (notesHtml && tagsHtml ? ' ' : '') + tagsHtml;
+        
+        return `
+          <tr class="${rowClass}">
+            <td>${new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+            <td>
+              <span style="font-size: 18px;">${cat.icon}</span> ${cat.name}
+              ${t.isRecurring ? ' <span class="recurring-badge">RECURRING</span>' : ''}
+            </td>
+            <td style="font-weight: 600; color: ${cat.color};">₱${t.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+            <td>${t.paymentMethod}</td>
+            <td>${notesAndTags || '-'}</td>
+            <td style="text-align: center;">
+              <button class="details-btn" onclick="showTransactionDetails(${t.id})">Details</button>
+              <button class="edit-btn" onclick="showEditModal(${t.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteTransaction(${t.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderIncome() {
+      const list = document.getElementById('incomeList');
+      if (income.length === 0) {
+        list.innerHTML = '<p style="text-align: center; padding: 3rem; color: #666;">No income records yet</p>';
+        return;
+      }
+
+      const sortedIncome = [...income].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      list.innerHTML = '<table class="transactions-table"><thead><tr><th>Date</th><th>Source</th><th>Amount</th><th style="text-align: center;">Actions</th></tr></thead><tbody>' +
+        sortedIncome.map(i => `
+          <tr>
+            <td>${new Date(i.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+            <td><span style="font-size: 18px;">💰</span> ${i.source}</td>
+            <td style="font-weight: 600; color: #8B998C;">₱${i.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+            <td style="text-align: center;">
+              <button class="details-btn" onclick="showTransactionDetails(${i.id})">Details</button>
+              <button class="edit-btn" onclick="showEditIncomeModal(${i.id})">Edit</button>
+              <button class="delete-btn" onclick="deleteIncome(${i.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('') + '</tbody></table>';
+    }
+
+    function setDateRange(preset) {
+      const today = new Date();
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      
+      let start, end = today;
+      
+      if (preset === 'today') {
+        start = today;
+      } else if (preset === 'week') {
+        start = new Date(today);
+        start.setDate(start.getDate() - 7);
+      } else if (preset === 'month') {
+        start = new Date(today);
+        start.setDate(start.getDate() - 30);
+      } else if (preset === 'thisMonth') {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+      } else if (preset === 'lastMonth') {
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        end = new Date(today.getFullYear(), today.getMonth(), 0);
+      }
+      
+      startInput.value = start.toISOString().split('T')[0];
+      endInput.value = end.toISOString().split('T')[0];
+      updatePaymentChart();
+    }
+
+    function generateRecurring() {
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toISOString();
+      let added = 0;
+      
+      recurringTemplates.forEach(r => {
+        const exists = transactions.some(t => 
+          t.date.substring(0, 7) === currentMonth && 
+          t.category === r.category && 
+          t.amount === r.amount &&
+          t.paymentMethod === r.paymentMethod &&
+          t.isRecurring
+        );
+        
+        if (!exists) {
+          transactions.unshift({
+            id: Date.now() + Math.random(),
+            date: today,
+            category: r.category,
+            amount: r.amount,
+            paymentMethod: r.paymentMethod,
+            notes: r.notes,
+            tags: r.tags || [],
+            isRecurring: true,
+            frequency: r.frequency,
+            createdAt: now
+          });
+          added++;
+        }
+      });
+      
+      showModal('Recurring Transactions', added > 0 ? `${added} recurring transaction(s) added for this month!` : 'All recurring transactions already exist for this month.');
+      updateDashboard();
+      applyFilters();
+      checkRecurringReminder();
+    }
+
+    function updateDashboard() {
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const monthTransactions = transactions.filter(t => t.date.substring(0, 7) === currentMonth);
+      const monthExpenses = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      const monthIncome = income.filter(i => i.date.substring(0, 7) === currentMonth).reduce((sum, i) => sum + i.amount, 0);
+      const balance = monthIncome - monthExpenses;
+
+      document.getElementById('monthIncome').textContent = '₱' + monthIncome.toLocaleString('en-PH', {minimumFractionDigits: 2});
+      document.getElementById('monthExpenses').textContent = '₱' + monthExpenses.toLocaleString('en-PH', {minimumFractionDigits: 2});
+      document.getElementById('balance').textContent = '₱' + balance.toLocaleString('en-PH', {minimumFractionDigits: 2});
+      document.getElementById('balance').style.color = balance >= 0 ? '#8B998C' : '#626E6A';
+      document.getElementById('totalTransactions').textContent = transactions.length;
+
+      if (monthTransactions.length > 0) {
+        const mostExpensive = monthTransactions.reduce((max, t) => t.amount > max.amount ? t : max);
+        document.getElementById('mostExpensive').textContent = '₱' + mostExpensive.amount.toLocaleString('en-PH', {maximumFractionDigits: 0}) + ' (' + categories[mostExpensive.category].name + ')';
+        
+        const paymentCounts = {};
+        monthTransactions.forEach(t => paymentCounts[t.paymentMethod] = (paymentCounts[t.paymentMethod] || 0) + 1);
+        const mostUsed = Object.entries(paymentCounts).sort((a, b) => b[1] - a[1])[0];
+        document.getElementById('mostUsedPayment').textContent = mostUsed[0] + ' (' + mostUsed[1] + 'x)';
+        
+        const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+        document.getElementById('avgDaily').textContent = '₱' + Math.round(monthExpenses / daysInMonth).toLocaleString('en-PH');
+        
+        const categorySums = {};
+        monthTransactions.forEach(t => categorySums[t.category] = (categorySums[t.category] || 0) + t.amount);
+        const topCat = Object.entries(categorySums).sort((a, b) => b[1] - a[1])[0];
+        document.getElementById('topCategory').textContent = categories[topCat[0]].name + ' (₱' + Math.round(topCat[1]).toLocaleString('en-PH') + ')';
+      }
+
+      renderInsights();
+      renderPatterns();
+      updateCategoryChart();
+      updatePaymentChart();
+      updateSpendingForecast();
+      updateAchievements();
+      checkRecurringReminder();
+    }
+
+    function updateSpendingForecast() {
+      const now = new Date();
+      const currentMonth = now.toISOString().substring(0, 7);
+      const monthTransactions = transactions.filter(t => t.date.substring(0, 7) === currentMonth);
+      const spent = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysElapsed = now.getDate();
+      
+      const avgDaily = daysElapsed > 0 ? spent / daysElapsed : 0;
+      const projected = Math.round(avgDaily * daysInMonth);
+      const remaining = daysInMonth - daysElapsed;
+      
+      document.getElementById('currentMonthSpend').textContent = '₱' + spent.toLocaleString('en-PH', {maximumFractionDigits: 0});
+      document.getElementById('projectedSpend').textContent = '₱' + projected.toLocaleString('en-PH', {maximumFractionDigits: 0});
+      document.getElementById('daysElapsed').textContent = daysElapsed;
+      document.getElementById('daysRemaining').textContent = remaining;
+      
+      let message = '';
+      if (remaining > 0 && daysElapsed > 0) {
+        const neededDaily = (projected - spent) / remaining;
+        const diff = Math.round(avgDaily - neededDaily);
+        
+        if (diff > 100) {
+          message = `⚠️ Spending ₱${diff}/day above forecast!`;
+        } else if (diff < -100) {
+          message = `✅ Can spend ₱${Math.abs(diff)}/day more!`;
+        } else {
+          message = `📊 You're on pace. Keep it up!`;
+        }
+      } else {
+        message = `📊 Month-end forecast: ₱${projected.toLocaleString('en-PH', {maximumFractionDigits: 0})}`;
+      }
+      
+      document.getElementById('forecastMessage').textContent = message;
+    }
+
+    function updateAchievements() {
+      const now = new Date();
+      const currentMonth = now.toISOString().substring(0, 7);
+      const monthTransactions = transactions.filter(t => t.date.substring(0, 7) === currentMonth);
+      const monthIncome = income.filter(i => i.date.substring(0, 7) === currentMonth).reduce((sum, i) => sum + i.amount, 0);
+      const monthExpenses = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      
+      const achievements = [];
+      
+      // Achievement 1: Budget Master
+      if (monthTransactions.length > 0) {
+        achievements.push({
+          icon: '💰',
+          title: 'Tracker Pro',
+          description: `${monthTransactions.length} transactions logged`
+        });
+      }
+      
+      // Achievement 2: Smart Saver
+      if (monthIncome > 0 && monthExpenses < monthIncome * 0.7) {
+        const savingsRate = Math.round(((monthIncome - monthExpenses) / monthIncome) * 100);
+        achievements.push({
+          icon: '🏦',
+          title: 'Smart Saver',
+          description: `Saved ${savingsRate}% of income`
+        });
+      }
+      
+      // Achievement 3: Consistency
+      let consecutiveDays = 0;
+      for (let i = 0; i < 31; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        if (transactions.some(t => t.date === dateStr)) {
+          consecutiveDays++;
+        } else if (consecutiveDays > 0) {
+          break;
+        }
+      }
+      
+      if (consecutiveDays >= 5) {
+        achievements.push({
+          icon: '🔥',
+          title: 'On Fire',
+          description: `${consecutiveDays}-day streak!`
+        });
+      }
+      
+      // Achievement 4: Payment Diversity
+      const uniquePayments = new Set(monthTransactions.map(t => t.paymentMethod)).size;
+      if (uniquePayments >= 5) {
+        achievements.push({
+          icon: '💳',
+          title: 'Payment Master',
+          description: `${uniquePayments} payment methods`
+        });
+      }
+      
+      // Achievement 5: Goal Crusher
+      const reachedGoals = savingsGoals.filter(g => g.current >= g.target).length;
+      if (reachedGoals > 0) {
+        achievements.push({
+          icon: '🚀',
+          title: 'Goal Crusher',
+          description: `${reachedGoals} goal(s) reached!`
+        });
+      }
+      
+      // Achievement 6: Perfect Record
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const daysLogged = new Set(monthTransactions.map(t => t.date)).size;
+      if (daysLogged === now.getDate()) {
+        achievements.push({
+          icon: '📊',
+          title: 'Perfect Logging',
+          description: `${daysLogged} days logged`
+        });
+      }
+      
+      // Achievement 7: Top Spender
+      const topCatName = monthTransactions.length > 0 ? 
+        Object.entries(Object.fromEntries(monthTransactions.map(t => [t.category, (monthTransactions.filter(x => x.category === t.category).reduce((s, x) => s + x.amount, 0))]))).sort((a, b) => b[1] - a[1])[0][0] :
+        null;
+      
+      if (topCatName) {
+        const topAmount = monthTransactions.filter(t => t.category === topCatName).reduce((s, t) => s + t.amount, 0);
+        achievements.push({
+          icon: '🎯',
+          title: 'Top Category',
+          description: `${categories[topCatName].name}: ₱${Math.round(topAmount)}`
+        });
+      }
+      
+      // Achievement 8: Income Earned
+      if (monthIncome > 0) {
+        achievements.push({
+          icon: '💸',
+          title: 'Income Tracker',
+          description: `₱${monthIncome.toLocaleString('en-PH', {maximumFractionDigits: 0})}`
+        });
+      }
+      
+      const container = document.getElementById('achievementsList');
+      if (achievements.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; padding: 2rem;">Start tracking to unlock achievements!</p>';
+      } else {
+        // Show only first 2 achievements
+        const topAchievements = achievements.slice(0, 2);
+        container.innerHTML = topAchievements.map(a => `
+          <div style="background: white; border: 2px solid #FFB700; border-radius: 12px; padding: 1rem; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 8px;">${a.icon}</div>
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">${a.title}</div>
+            <div style="font-size: 12px; color: #666;">${a.description}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateCategoryChart() {
+      const analyticsFilters = {
+        startDate: document.getElementById('categoryStartDate').value,
+        endDate: document.getElementById('categoryEndDate').value
+      };
+
+      let filtered = getFilteredTransactions(analyticsFilters);
+
+      const categoryData = Object.keys(categories).map(cat => ({
+        name: categories[cat].name,
+        amount: filtered.filter(t => t.category === cat).reduce((sum, t) => sum + t.amount, 0),
+        color: categories[cat].color
+      })).filter(c => c.amount > 0);
+
+      if (categoryChart) categoryChart.destroy();
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      categoryChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: categoryData.map(c => c.name),
+          datasets: [{
+            data: categoryData.map(c => c.amount),
+            backgroundColor: categoryData.map(c => c.color),
+            borderColor: '#F1ECD9',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Poppins' } } },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  return label + ': ₱' + value.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                }
+              }
+            }
+          }
+        }
+      });
+      updateCategoryInsights();
+    }
+
+    function updatePaymentChart() {
+      const analyticsFilters = {
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+      };
+
+      let filtered = getFilteredTransactions(analyticsFilters);
+      
+      const paymentData = paymentMethods.map(method => ({
+        name: method,
+        value: filtered.filter(t => t.paymentMethod === method).reduce((sum, t) => sum + t.amount, 0)
+      })).filter(p => p.value > 0);
+
+      if (paymentChart) paymentChart.destroy();
+      const ctx = document.getElementById('paymentChart').getContext('2d');
+      paymentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: paymentData.map(p => p.name),
+          datasets: [{
+            label: 'Amount',
+            data: paymentData.map(p => p.value),
+            backgroundColor: '#8B998C',
+            borderColor: '#626E6A',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => '₱' + context.parsed.y.toLocaleString('en-PH', {minimumFractionDigits: 2})
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => '₱' + value.toLocaleString(),
+                font: { family: 'Poppins' }
+              }
+            },
+            x: {
+              ticks: {
+                font: { family: 'Poppins' }
+              }
+            }
+          }
+        }
+      });
+      
+      updateCategoryInsights();
+      updatePaymentAnalysis();
+    }
+
+    function updateCategoryInsights() {
+      const analyticsFilters = {
+        startDate: document.getElementById('categoryStartDate').value,
+        endDate: document.getElementById('categoryEndDate').value
+      };
+      
+      let filtered = getFilteredTransactions(analyticsFilters);
+      
+      const categoryTotals = {};
+      const categoryCounts = {};
+      filtered.forEach(t => {
+        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+        categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
+      });
+      
+      const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+      
+      let insights = '';
+      if (sorted.length === 0) {
+        insights = 'No data for selected period';
+      } else {
+        const topCat = sorted[0];
+        const topCatName = categories[topCat[0]] ? categories[topCat[0]].name : topCat[0];
+        const topCatAmount = topCat[1];
+        const topCatCount = categoryCounts[topCat[0]];
+        const avgPerTransaction = topCatAmount / topCatCount;
+        
+        insights = `
+          • <strong>Top Category:</strong> ${topCatName} (₱${Math.round(topCatAmount).toLocaleString('en-PH')})<br>
+          • <strong>Transactions:</strong> ${topCatCount} transactions<br>
+          • <strong>Average:</strong> ₱${Math.round(avgPerTransaction).toLocaleString('en-PH')}/transaction<br>
+          • <strong>Categories:</strong> You're spending across ${sorted.length} categories
+        `;
+      }
+      
+      document.getElementById('categoryInsights').innerHTML = insights;
+    }
+
+    function updatePaymentAnalysis() {
+      const analyticsFilters = {
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value
+      };
+      
+      let filtered = getFilteredTransactions(analyticsFilters);
+      
+      const paymentTotals = {};
+      const paymentCounts = {};
+      filtered.forEach(t => {
+        paymentTotals[t.paymentMethod] = (paymentTotals[t.paymentMethod] || 0) + t.amount;
+        paymentCounts[t.paymentMethod] = (paymentCounts[t.paymentMethod] || 0) + 1;
+      });
+      
+      const sorted = Object.entries(paymentTotals).sort((a, b) => b[1] - a[1]);
+      
+      let analysis = '';
+      if (sorted.length === 0) {
+        analysis = 'No payment data for selected period';
+      } else {
+        const topPayment = sorted[0];
+        const topPaymentName = topPayment[0];
+        const topPaymentAmount = topPayment[1];
+        const topPaymentCount = paymentCounts[topPayment[0]];
+        const avgPerTransaction = topPaymentAmount / topPaymentCount;
+        const totalMethods = sorted.length;
+        
+        analysis = `
+          • <strong>Most Used:</strong> ${topPaymentName} (${topPaymentCount}x)<br>
+          • <strong>Amount:</strong> ₱${Math.round(topPaymentAmount).toLocaleString('en-PH')}<br>
+          • <strong>Average:</strong> ₱${Math.round(avgPerTransaction).toLocaleString('en-PH')}/transaction<br>
+          • <strong>Payment Methods:</strong> Using ${totalMethods} different methods
+        `;
+      }
+      
+      document.getElementById('paymentAnalysis').innerHTML = analysis;
+    }
+
+    function exportData() {
+      const currentView = document.getElementById('transactionsView').style.display !== 'none' ? 'transactions' : 
+                          document.getElementById('incomeView').style.display !== 'none' ? 'income' : 'billStatements';
+      
+      if (currentView === 'transactions') {
+        const filtered = getFilteredTransactions();
+        let csv = 'Date,Category,Amount,Payment Method,Recurring,Tags,Notes,Added On\n';
+        filtered.forEach(t => {
+          const cat = categories[t.category].name;
+          const tags = (t.tags || []).join('; ');
+          const recurring = t.isRecurring ? 'Yes' : 'No';
+          const addedOn = new Date(t.createdAt).toLocaleDateString('en-US');
+          csv += `"${t.date}","${cat}","${t.amount}","${t.paymentMethod}","${recurring}","${tags}","${t.notes || ''}","${addedOn}"\n`;
+        });
+        downloadCSV(csv, 'transactions.csv');
+      } else if (currentView === 'income') {
+        let csv = 'Date,Source,Amount,Added On\n';
+        income.forEach(i => {
+          const addedOn = new Date(i.createdAt).toLocaleDateString('en-US');
+          csv += `"${i.date}","${i.source}","${i.amount}","${addedOn}"\n`;
+        });
+        downloadCSV(csv, 'income.csv');
+      } else {
+        let csv = 'Date Paid,Type,Name,Amount\n';
+        billStatements.forEach(s => {
+          const datePaid = new Date(s.datePaid).toLocaleDateString('en-US');
+          csv += `"${datePaid}","${s.type}","${s.name}","${s.amount}"\n`;
+        });
+        downloadCSV(csv, 'bill_statements.csv');
+      }
+    }
+
+    function downloadCSV(csv, filename) {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+
+    function deleteTransaction(id) {
+      if (confirm('Delete this transaction?')) {
+        transactions = transactions.filter(t => t.id !== id);
+        applyFilters();
+        updateDashboard();
+      }
+    }
+
+    function deleteIncome(id) {
+      if (confirm('Delete this income record?')) {
+        income = income.filter(i => i.id !== id);
+        renderIncome();
+        updateDashboard();
+      }
+    }
+
+    function saveData() {
+      const data = {
+        transactions,
+        recurringTemplates,
+        income,
+        billReminders,
+        billStatements,
+        creditCards,
+        allTags: Array.from(allTags),
+        ccAmounts,
+        notes,
+        todos,
+        tobuyItems,
+        checklist,
+        savingsGoals,
+        savedAt: new Date().toISOString()
+      };
+      
+      // Auto-save to browser storage for quick recovery
+      try {
+        localStorage.setItem('meiyMoneyBackup', JSON.stringify(data));
+      } catch (e) {
+        console.log('Browser storage full or unavailable');
+      }
+      
+      // Create downloadable backup file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `meiy_money_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      showModal('✅ Data Backed Up', 'Your backup file is ready!\n\n📂 Choose where to save it when prompted\n\n💾 File also saved to browser for quick recovery\n\n☁️ Cloud sync available for OneDrive');
+    }
+
+    function loadData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          transactions = (data.transactions || []).map(t => ({
+            ...t,
+            editHistory: t.editHistory || []
+          }));
+          recurringTemplates = data.recurringTemplates || [];
+          income = data.income || [];
+          billReminders = data.billReminders || [];
+          billStatements = data.billStatements || [];
+          creditCards = data.creditCards || creditCards;
+          allTags = new Set(data.allTags || []);
+          ccAmounts = data.ccAmounts || {};
+          notes = data.notes || [];
+          todos = data.todos || [];
+          tobuyItems = data.tobuyItems || [];
+          checklist = data.checklist || [];
+          savingsGoals = data.savingsGoals || [];
+          showModal('Data Loaded', 'Your budget data has been restored successfully!');
+          renderTagSuggestions();
+          renderBillReminders();
+          renderCreditCards();
+          renderNotes();
+          renderChecklist();
+          renderTobuy();
+          renderGoals();
+          updateDashboard();
+          checkRecurringReminder();
+          checkDueNotifications();
+        } catch (err) {
+          showModal('Error', 'Error loading data: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function showView(view) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(view).classList.add('active');
+      event.target.classList.add('active');
+      
+      if (view === 'dashboard') {
+        updateDashboard();
+      }
+      if (view === 'transactions') {
+        applyFilters();
+        toggleHistoryView('transactions');
+      }
+      if (view === 'reminders') {
+        renderCreditCards();
+        renderBillReminders();
+      }
+      if (view === 'notes') {
+        renderNotes();
+        renderChecklist();
+        renderTobuy();
+        renderGoals();
+      }
+    }
+
+    // Event Listeners
+    document.getElementById('expenseForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const isRecurring = document.getElementById('isRecurring').checked;
+      const tagsInput = document.getElementById('tags').value;
+      const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+      
+      tags.forEach(tag => allTags.add(tag));
+      
+      const transactionData = {
+        id: Date.now(),
+        date: document.getElementById('date').value,
+        category: selectedCategory,
+        amount: parseFloat(document.getElementById('amount').value),
+        paymentMethod: document.getElementById('paymentMethod').value,
+        notes: document.getElementById('expenseNotes').value,
+        tags: tags,
+        isRecurring: false,
+        createdAt: new Date().toISOString(),
+        editHistory: []
+      };
+
+      const duplicate = checkForDuplicates(transactionData);
+      if (duplicate) {
+        showDuplicateWarning(transactionData, duplicate);
+        return;
+      }
+
+      if (isRecurring) {
+        const frequency = document.getElementById('frequency').value;
+        recurringTemplates.push({ ...transactionData, frequency });
+        showModal('Recurring Template', 'Recurring template saved! Use "Generate Recurring" button to add it to this month.');
+      } else {
+        transactions.unshift(transactionData);
+        showModal('Success', 'Expense added successfully!');
+      }
+      
+      e.target.reset();
+      document.getElementById('date').valueAsDate = new Date();
+      document.getElementById('isRecurring').checked = false;
+      document.getElementById('recurringFields').style.display = 'none';
+      renderTagSuggestions();
+      updateDashboard();
+    });
+
+    document.getElementById('incomeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newIncome = {
+        id: Date.now(),
+        date: document.getElementById('incomeDate').value,
+        amount: parseFloat(document.getElementById('incomeAmount').value),
+        source: document.getElementById('incomeSource').value,
+        createdAt: new Date().toISOString()
+      };
+      income.unshift(newIncome);
+      e.target.reset();
+      document.getElementById('incomeDate').valueAsDate = new Date();
+      showModal('Success', 'Income added successfully!');
+      updateDashboard();
+    });
+
+    document.getElementById('billReminderForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newReminder = {
+        id: Date.now(),
+        name: document.getElementById('billName').value,
+        amount: null,
+        dueDate: parseInt(document.getElementById('billDue').value)
+      };
+      billReminders.push(newReminder);
+      e.target.reset();
+      renderBillReminders();
+      showModal('Success', 'Bill reminder added! Now enter the amount when ready.');
+    });
+
+    document.getElementById('editForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingTransaction) return;
+
+      const tagsInput = document.getElementById('editTags').value;
+      const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+      
+      const updatedTransaction = {
+        ...editingTransaction,
+        date: document.getElementById('editDate').value,
+        category: document.getElementById('editCategory').value,
+        amount: parseFloat(document.getElementById('editAmount').value),
+        paymentMethod: document.getElementById('editPaymentMethod').value,
+        notes: document.getElementById('editNotes').value,
+        tags: tags
+      };
+
+      // Track what changed for edit history
+      const changes = {};
+      if (editingTransaction.date !== updatedTransaction.date) {
+        changes.date = { old: editingTransaction.date, new: updatedTransaction.date };
+      }
+      if (editingTransaction.category !== updatedTransaction.category) {
+        changes.category = { old: editingTransaction.category, new: updatedTransaction.category };
+      }
+      if (editingTransaction.amount !== updatedTransaction.amount) {
+        changes.amount = { old: editingTransaction.amount, new: updatedTransaction.amount };
+      }
+      if (editingTransaction.paymentMethod !== updatedTransaction.paymentMethod) {
+        changes.paymentMethod = { old: editingTransaction.paymentMethod, new: updatedTransaction.paymentMethod };
+      }
+      if (editingTransaction.notes !== updatedTransaction.notes) {
+        changes.notes = { old: editingTransaction.notes, new: updatedTransaction.notes };
+      }
+      
+      // Add to edit history if changes were made
+      if (Object.keys(changes).length > 0) {
+        if (!updatedTransaction.editHistory) {
+          updatedTransaction.editHistory = [];
+        }
+        updatedTransaction.editHistory.push({
+          timestamp: new Date().toISOString(),
+          changes: changes
+        });
+      }
+
+      transactions = transactions.map(t => t.id === editingTransaction.id ? updatedTransaction : t);
+      closeEditModal();
+      showModal('Success', 'Transaction updated successfully!');
+      updateDashboard();
+      applyFilters();
+    });
+
+    document.getElementById('editBillForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingBill) return;
+
+      const amountValue = document.getElementById('editBillAmount').value;
+      const updatedBill = {
+        ...editingBill,
+        name: document.getElementById('editBillName').value,
+        amount: amountValue ? parseFloat(amountValue) : null,
+        dueDate: parseInt(document.getElementById('editBillDue').value)
+      };
+
+      billReminders = billReminders.map(b => b.id === editingBill.id ? updatedBill : b);
+      closeEditBillModal();
+      showModal('Success', 'Bill reminder updated successfully!');
+      renderBillReminders();
+    });
+
+    document.getElementById('newCCForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('ccName').value;
+      
+      // Check for duplicate
+      if (creditCards.some(cc => cc.name.toLowerCase() === name.toLowerCase())) {
+        alert('A credit card with this name already exists!');
+        return;
+      }
+      
+      const newCC = {
+        name: name,
+        statement: parseInt(document.getElementById('ccStatement').value),
+        due: parseInt(document.getElementById('ccDue').value),
+        custom: true
+      };
+      
+      creditCards.push(newCC);
+      e.target.reset();
+      document.getElementById('addCCForm').style.display = 'none';
+      renderCreditCards();
+      showModal('Success', 'Credit card added successfully!');
+    });
+
+    document.getElementById('noteModalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = document.getElementById('noteModalText').value.trim();
+      if (!text) return;
+      
+      if (editingNote) {
+        // Update existing note
+        if (!editingNote.editHistory) editingNote.editHistory = [];
+        editingNote.editHistory.push({
+          timestamp: new Date().toISOString(),
+          previousText: editingNote.text
+        });
+        editingNote.text = text;
+        editingNote = null;
+      } else {
+        // Create new note
+        notes.unshift({
+          id: Date.now(),
+          text: text,
+          createdAt: new Date().toISOString(),
+          editHistory: []
+        });
+      }
+      
+      closeNoteModal();
+      renderNotes();
+    });
+
+    document.getElementById('checklistModalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = document.getElementById('checklistText').value.trim();
+      if (!text) return;
+      
+      checklist.push({
+        id: Date.now(),
+        text: text,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+      
+      closeChecklistModal();
+      renderChecklist();
+    });
+
+    document.getElementById('tobuyModalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = document.getElementById('tobuyModalText').value.trim();
+      if (!text) return;
+      
+      tobuyItems.push({
+        id: Date.now(),
+        text: text,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+      
+      document.getElementById('tobuyModalForm').reset();
+      closeTobuyModal();
+      renderTobuy();
+    });
+
+    document.getElementById('goalModalForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      if (editingGoal) {
+        // Update existing goal
+        editingGoal.name = document.getElementById('goalName').value;
+        editingGoal.target = parseFloat(document.getElementById('goalTarget').value);
+        editingGoal.current = parseFloat(document.getElementById('goalCurrent').value);
+        editingGoal.date = document.getElementById('goalDate').value;
+        editingGoal = null;
+      } else {
+        // Create new goal
+        savingsGoals.push({
+          id: Date.now(),
+          name: document.getElementById('goalName').value,
+          target: parseFloat(document.getElementById('goalTarget').value),
+          current: parseFloat(document.getElementById('goalCurrent').value),
+          date: document.getElementById('goalDate').value,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
+      closeGoalModal();
+      renderGoals();
+    });
+
+    document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('newCatName').value.trim();
+      const icon = document.getElementById('newCatIcon').value.trim();
+      const color = document.getElementById('newCatColor').value;
+      const key = name.toLowerCase().replace(/\s+/g, '_');
+      
+      if (categories[key]) {
+        alert('This category already exists!');
+        return;
+      }
+      
+      categories[key] = { name, icon, color };
+      
+      e.target.reset();
+      renderCategoryButtons();
+      renderCategoryList();
+      showModal('Success', `Category "${name}" added!`);
+    });
+
+    document.getElementById('editIncomeForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingIncome) return;
+
+      const updatedIncome = {
+        ...editingIncome,
+        date: document.getElementById('editIncomeDate').value,
+        amount: parseFloat(document.getElementById('editIncomeAmount').value),
+        source: document.getElementById('editIncomeSource').value
+      };
+
+      income = income.map(i => i.id === editingIncome.id ? updatedIncome : i);
+      closeEditIncomeModal();
+      showModal('Success', 'Income updated successfully!');
+      renderIncome();
+      updateDashboard();
+    });
+
+    // ===== PAGE INITIALIZATION ON LOAD =====
+    try {
+      updateDashboard();
+    } catch (e) {
+      console.log('Initialization error (safe to ignore):', e.message);
+    }
+  </script>
+</body>
+</html>
