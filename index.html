@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget Tracker</title>
+  <title>meiy money — Personal Budget Tracker</title>
+  <meta name="description" content="meiy money — A personal budget tracker for managing expenses, income, credit cards, bill reminders, and savings goals.">
+  <meta name="author" content="meiy">
+  <meta name="theme-color" content="#8B998C">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <meta property="og:title" content="meiy money — Personal Budget Tracker">
+  <meta property="og:description" content="Track expenses, income, credit cards, bill reminders, and savings goals.">
+  <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -127,7 +134,14 @@
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <h1>meiy money</h1>
+      <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+        <h1>meiy money</h1>
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 10px;">
+          <span style="font-size: 12px; opacity: 0.8; font-family: 'Poppins', sans-serif;">Overall Balance</span>
+          <span id="overallBalance" style="font-size: 18px; font-weight: 700; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;">₱0.00</span>
+          <button onclick="toggleBalanceVisibility()" id="balanceEyeBtn" style="background: none; border: none; cursor: pointer; padding: 2px; font-size: 16px; color: #F1ECD9; opacity: 0.8; line-height: 1;" title="Hide/Show balance">👁</button>
+        </div>
+      </div>
       <div class="data-btns">
         <button class="data-btn" onclick="saveData()">Save Data</button>
         <button class="data-btn" onclick="document.getElementById('loadFile').click()">Load Data</button>
@@ -582,10 +596,14 @@
         <h3 style="margin: 0 0 1rem; font-size: 20px; font-weight: 400;">Bill dues</h3>
         
         <form id="billReminderForm" style="margin-bottom: 2rem; padding: 1.5rem; background: #f5f5f5; border-radius: 8px;">
-          <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; align-items: end;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
             <div>
               <label>Bill Name</label>
               <input type="text" id="billName" placeholder="Internet, Water, etc." required>
+            </div>
+            <div>
+              <label>Statement Day</label>
+              <input type="number" id="billStatement" min="1" max="31" placeholder="1">
             </div>
             <div>
               <label>Due Day</label>
@@ -721,6 +739,10 @@
             <input type="number" id="editBillAmount" step="0.01" style="border: 0.5px solid #ccc;">
           </div>
           <div style="margin-bottom: 1rem;">
+            <label>Statement Day</label>
+            <input type="number" id="editBillStatement" min="1" max="31" style="border: 0.5px solid #ccc;" placeholder="Day of month (optional)">
+          </div>
+          <div style="margin-bottom: 1rem;">
             <label>Due Day</label>
             <input type="number" id="editBillDue" min="1" max="31" required style="border: 0.5px solid #ccc;">
           </div>
@@ -729,6 +751,34 @@
               Save Changes
             </button>
             <button type="button" onclick="closeEditBillModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="editCCModal" onclick="closeEditCCModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Edit Credit Card</h3>
+        <form id="editCCForm">
+          <div style="margin-bottom: 1rem;">
+            <label>Card Name</label>
+            <input type="text" id="editCCName" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Statement Day</label>
+            <input type="number" id="editCCStatement" min="1" max="31" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Due Day</label>
+            <input type="number" id="editCCDueDay" min="1" max="31" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Changes
+            </button>
+            <button type="button" onclick="closeEditCCModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
               Cancel
             </button>
           </div>
@@ -917,7 +967,7 @@
       { name: 'Atome', statement: 9, due: 18, custom: false },
       { name: 'Lazpaylater', statement: 30, due: 16, custom: false },
       { name: 'Tiktokpaylater', statement: 15, due: 1, custom: false },
-      { name: 'Eastwest Gold', statement: 3, due: 18, custom: false }
+      { name: 'Eastwest Gold', statement: 3, due: 28, custom: false }
     ];
 
     const paymentMethods = ['Cash', 'Eastwest Gold', 'Maribank', 'Maya', 'Maya Black', 'Unionbank Platinum', 'Unionbank U', 'Atome', 'Tiktokpaylater', 'Lazpaylater'];
@@ -941,6 +991,24 @@
     let checklist = [];
     let savingsGoals = [];
     let editingCC = null;
+    let balanceHidden = false;
+    let actualBalanceText = '₱0.00';
+
+    function toggleBalanceVisibility() {
+      balanceHidden = !balanceHidden;
+      const el = document.getElementById('overallBalance');
+      const btn = document.getElementById('balanceEyeBtn');
+      if (balanceHidden) {
+        el.textContent = '₱ * * * * *';
+        btn.textContent = '👁‍🗨';
+        btn.title = 'Show balance';
+      } else {
+        el.textContent = actualBalanceText;
+        btn.textContent = '👁';
+        btn.title = 'Hide balance';
+      }
+    }
+
     let pendingTransaction = null;
 
     function showDuplicateWarning(transaction, duplicate) {
@@ -1365,6 +1433,7 @@
       
       document.getElementById('editBillName').value = bill.name;
       document.getElementById('editBillAmount').value = bill.amount !== null && bill.amount !== undefined ? bill.amount : '';
+      document.getElementById('editBillStatement').value = bill.statementDate || '';
       document.getElementById('editBillDue').value = bill.dueDate;
       
       document.getElementById('editBillModal').classList.add('show');
@@ -1511,7 +1580,10 @@
         <div class="cc-card ${isDueSoon ? 'due-soon' : ''} ${ccData.paid ? 'paid' : ''} ${ccData.noAmountDue ? 'paid' : ''}" style="width: ${widthClass};">
           <div class="cc-card-name">
             <span>${cc.name}</span>
-            ${cc.custom ? `<button onclick="deleteCustomCC('${cc.name}')" style="padding: 2px 6px; font-size: 11px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 4px; cursor: pointer;">×</button>` : ''}
+            <div style="display: flex; gap: 4px;">
+              <button onclick="openEditCCModal('${cc.name}')" style="padding: 2px 6px; font-size: 11px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 4px; cursor: pointer;">✎</button>
+              <button onclick="deleteCreditCard('${cc.name}')" style="padding: 2px 6px; font-size: 11px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 4px; cursor: pointer;">×</button>
+            </div>
           </div>
           <div class="cc-card-dates">
             <div class="cc-date-item">
@@ -1642,6 +1714,31 @@
       }
     }
 
+    let editingCCName = null;
+
+    function deleteCreditCard(name) {
+      if (confirm(`Delete credit card "${name}"? This will also remove any saved amounts.`)) {
+        creditCards = creditCards.filter(cc => cc.name !== name);
+        delete ccAmounts[name];
+        renderCreditCards();
+      }
+    }
+
+    function openEditCCModal(name) {
+      const card = creditCards.find(cc => cc.name === name);
+      if (!card) return;
+      editingCCName = name;
+      document.getElementById('editCCName').value = card.name;
+      document.getElementById('editCCStatement').value = card.statement;
+      document.getElementById('editCCDueDay').value = card.due;
+      document.getElementById('editCCModal').classList.add('show');
+    }
+
+    function closeEditCCModal() {
+      document.getElementById('editCCModal').classList.remove('show');
+      editingCCName = null;
+    }
+
     function renderBillReminders() {
       const container = document.getElementById('billRemindersContainer');
       
@@ -1659,7 +1756,7 @@
           <div style="background: ${isDueSoon ? 'rgba(239, 68, 68, 0.05)' : '#f5f5f5'}; border: 1px solid ${isDueSoon ? '#EF4444' : '#e0e0e0'}; border-radius: 8px; padding: 1rem;">
             <div style="font-size: 15px; font-weight: 600; margin-bottom: 8px; font-family: 'Poppins', sans-serif;">${reminder.name}</div>
             <div style="font-size: 14px; color: #666; margin-bottom: 8px; font-family: 'Poppins', sans-serif;">
-              Due: <strong>${reminder.dueDate}${getDaySuffix(reminder.dueDate)} of each month</strong>
+              ${reminder.statementDate ? `Statement: <strong>${reminder.statementDate}${getDaySuffix(reminder.statementDate)}</strong> · ` : ''}Due: <strong>${reminder.dueDate}${getDaySuffix(reminder.dueDate)} of each month</strong>
             </div>
             <div style="margin-bottom: 8px;">
               <div style="font-size: 11px; color: #666; margin-bottom: 4px; font-family: 'Poppins', sans-serif; text-transform: uppercase; font-weight: 600;">Amount Due</div>
@@ -2537,6 +2634,18 @@
       document.getElementById('balance').style.color = balance >= 0 ? '#8B998C' : '#626E6A';
       document.getElementById('totalTransactions').textContent = transactions.length;
 
+      // Overall Balance (all-time income minus all-time expenses)
+      const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);
+      const totalExpenses = transactions.reduce((sum, t) => sum + t.amount, 0);
+      const overallBalance = totalIncome - totalExpenses;
+      actualBalanceText = '₱' + overallBalance.toLocaleString('en-PH', {minimumFractionDigits: 2});
+      const balanceEl = document.getElementById('overallBalance');
+      if (!balanceHidden) {
+        balanceEl.textContent = actualBalanceText;
+      } else {
+        balanceEl.textContent = '₱ * * * * *';
+      }
+
       if (monthTransactions.length > 0) {
         const mostExpensive = monthTransactions.reduce((max, t) => t.amount > max.amount ? t : max);
         document.getElementById('mostExpensive').textContent = '₱' + mostExpensive.amount.toLocaleString('en-PH', {maximumFractionDigits: 0}) + ' (' + categories[mostExpensive.category].name + ')';
@@ -3127,10 +3236,12 @@
 
     document.getElementById('billReminderForm').addEventListener('submit', (e) => {
       e.preventDefault();
+      const statementVal = document.getElementById('billStatement').value;
       const newReminder = {
         id: Date.now(),
         name: document.getElementById('billName').value,
         amount: null,
+        statementDate: statementVal ? parseInt(statementVal) : null,
         dueDate: parseInt(document.getElementById('billDue').value)
       };
       billReminders.push(newReminder);
@@ -3197,10 +3308,12 @@
       if (!editingBill) return;
 
       const amountValue = document.getElementById('editBillAmount').value;
+      const statementValue = document.getElementById('editBillStatement').value;
       const updatedBill = {
         ...editingBill,
         name: document.getElementById('editBillName').value,
         amount: amountValue ? parseFloat(amountValue) : null,
+        statementDate: statementValue ? parseInt(statementValue) : null,
         dueDate: parseInt(document.getElementById('editBillDue').value)
       };
 
@@ -3366,6 +3479,31 @@
     } catch (e) {
       console.log('Initialization error (safe to ignore):', e.message);
     }
+
+    document.getElementById('editCCForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingCCName) return;
+
+      const newName = document.getElementById('editCCName').value.trim();
+      const newStatement = parseInt(document.getElementById('editCCStatement').value);
+      const newDue = parseInt(document.getElementById('editCCDueDay').value);
+
+      const card = creditCards.find(cc => cc.name === editingCCName);
+      if (card) {
+        // If name changed, update ccAmounts key
+        if (editingCCName !== newName && ccAmounts[editingCCName]) {
+          ccAmounts[newName] = ccAmounts[editingCCName];
+          delete ccAmounts[editingCCName];
+        }
+        card.name = newName;
+        card.statement = newStatement;
+        card.due = newDue;
+      }
+
+      closeEditCCModal();
+      showModal('Success', 'Credit card updated successfully!');
+      renderCreditCards();
+    });
   </script>
 </body>
 </html>
