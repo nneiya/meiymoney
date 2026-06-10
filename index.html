@@ -125,8 +125,61 @@
     .add-cc-form { padding: 1.5rem; background: #f5f5f5; border-radius: 8px; margin-bottom: 1rem; }
     
     @media (max-width: 768px) {
-      .cc-card { width: 100%; }
+      body { padding: 0.75rem; }
+      .container { max-width: 100%; }
+      .cc-card { width: 100% !important; }
+      .grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+      /* Header stacks vertically */
+      .header { padding: 1.25rem 1rem; flex-direction: column; align-items: stretch; text-align: center; }
+      .header h1 { font-size: 26px; }
+      .header > div:first-child { flex-direction: column; gap: 0.75rem !important; align-items: center !important; }
+      .data-btns { justify-content: center; }
+
+      /* Tabs scroll horizontally instead of wrapping */
+      .tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 6px; padding: 6px; }
+      .tab { flex: 0 0 auto; min-width: auto; padding: 10px 14px; font-size: 13px; white-space: nowrap; }
+
+      /* Force all 2 and 3 column inline grids to single/double column */
+      .bordered-section { padding: 1.25rem; }
+      .card { padding: 1rem; }
+
+      /* Tables scroll horizontally */
+      .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .transactions-table { font-size: 13px; min-width: 600px; }
+      .transactions-table th, .transactions-table td { padding: 8px; }
+
+      /* Charts shrink */
+      canvas { max-height: 280px !important; }
+
+      .metric-value { font-size: 20px; }
+      h1 { font-size: 26px; }
+      h2 { font-size: 22px; }
+      h3 { font-size: 18px; }
+
+      /* Modals fit screen */
+      .modal-content { width: 92% !important; max-width: 92% !important; margin: 1rem; max-height: 85vh; overflow-y: auto; }
+
+      /* Filter dropdowns reposition */
+      .filter-menu { left: 0; right: auto; min-width: 220px; }
+      .filter-submenu { left: 0; top: 100%; margin-left: 0; margin-top: 4px; }
+    }
+
+    @media (max-width: 480px) {
       .grid { grid-template-columns: 1fr; }
+      .header h1 { font-size: 22px; }
+      .data-btn { flex: 1; padding: 10px; }
+    }
+
+    /* Make inline 2/3-col grids responsive globally via attribute targeting */
+    @media (max-width: 768px) {
+      [style*="grid-template-columns: 1fr 1fr 1fr"],
+      [style*="grid-template-columns: 1fr 1fr"],
+      [style*="grid-template-columns: 2fr 1fr 1fr auto"],
+      [style*="grid-template-columns: 1fr 1fr 1fr auto"],
+      [style*="grid-template-columns: 2fr 1fr auto"] {
+        grid-template-columns: 1fr !important;
+      }
     }
   </style>
 </head>
@@ -143,6 +196,7 @@
         </div>
       </div>
       <div class="data-btns">
+        <span id="syncStatus" style="font-size: 11px; align-self: center; font-family: 'Poppins', sans-serif; opacity: 0.9;">💾 Local only</span>
         <button class="data-btn" onclick="saveData()">Save Data</button>
         <button class="data-btn" onclick="document.getElementById('loadFile').click()">Load Data</button>
         <input type="file" id="loadFile" accept=".json" style="display: none;" onchange="loadData(event)">
@@ -504,6 +558,7 @@
             Showing <strong id="filteredCount">0</strong> transactions | Total: <strong id="filteredTotal">₱0</strong>
           </div>
 
+          <div class="table-scroll">
           <table class="transactions-table">
             <thead>
               <tr>
@@ -517,10 +572,11 @@
             </thead>
             <tbody id="transactionsList"></tbody>
           </table>
+          </div>
         </div>
 
         <div id="incomeView" style="display: none;">
-          <div id="incomeList"></div>
+          <div class="table-scroll" id="incomeList"></div>
         </div>
 
         <div id="billStatementsView" style="display: none;">
@@ -530,6 +586,7 @@
             Total Payments: <strong id="billStatementCount">0</strong> | Total Amount: <strong id="billStatementTotal">₱0</strong>
           </div>
 
+          <div class="table-scroll">
           <table class="transactions-table">
             <thead>
               <tr>
@@ -542,6 +599,7 @@
             </thead>
             <tbody id="billStatementsList"></tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
@@ -948,6 +1006,74 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <!-- ===== FIREBASE SETUP ===== -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    // 🔥 PASTE YOUR FIREBASE CONFIG HERE 🔥
+    const firebaseConfig = {
+      apiKey: "PASTE_YOUR_API_KEY",
+      authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+      projectId: "PASTE_YOUR_PROJECT_ID",
+      storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+      messagingSenderId: "PASTE_YOUR_SENDER_ID",
+      appId: "PASTE_YOUR_APP_ID"
+    };
+
+    // A fixed document ID so all your devices read/write the same data.
+    const USER_DOC_ID = "meiy-main";
+
+    let db = null;
+    let firebaseReady = false;
+
+    try {
+      // Only initialize if config has been filled in
+      if (!firebaseConfig.apiKey.startsWith("PASTE_")) {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        firebaseReady = true;
+
+        // Expose save function globally so the main script can call it
+        window.firebaseSave = async function(data) {
+          if (!firebaseReady) return;
+          try {
+            await setDoc(doc(db, "budgets", USER_DOC_ID), { payload: JSON.stringify(data), updatedAt: new Date().toISOString() });
+            window.updateSyncStatus && window.updateSyncStatus('synced');
+          } catch (e) {
+            console.error('Firebase save error:', e);
+            window.updateSyncStatus && window.updateSyncStatus('error');
+          }
+        };
+
+        // Real-time listener: when cloud data changes, load it
+        onSnapshot(doc(db, "budgets", USER_DOC_ID), (snapshot) => {
+          if (snapshot.exists() && snapshot.data().payload) {
+            const cloudData = JSON.parse(snapshot.data().payload);
+            window.loadFromFirebase && window.loadFromFirebase(cloudData);
+            window.updateSyncStatus && window.updateSyncStatus('synced');
+          } else {
+            // No cloud document yet (first run). Mark load done and push current local data up.
+            window.markCloudEmpty && window.markCloudEmpty();
+          }
+        }, (err) => {
+          console.error('Firebase listen error:', err);
+          window.updateSyncStatus && window.updateSyncStatus('error');
+        });
+
+        window.firebaseReady = true;
+      } else {
+        window.firebaseReady = false;
+        console.log('Firebase not configured yet — using local storage only.');
+      }
+    } catch (e) {
+      console.error('Firebase init error:', e);
+      window.firebaseReady = false;
+    }
+  </script>
+
   <script>
     const categories = {
       'commute': { name: 'Commute', icon: '🚗', color: '#8B998C' },
@@ -991,6 +1117,118 @@
     let checklist = [];
     let savingsGoals = [];
     let editingCC = null;
+
+    // ===== CENTRAL DATA SYNC HELPERS =====
+    function gatherData() {
+      return {
+        transactions,
+        recurringTemplates,
+        income,
+        billReminders,
+        billStatements,
+        creditCards,
+        allTags: Array.from(allTags),
+        ccAmounts,
+        notes,
+        todos,
+        tobuyItems,
+        checklist,
+        savingsGoals,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function applyData(data) {
+      if (!data) return;
+      transactions = (data.transactions || []).map(t => ({ ...t, editHistory: t.editHistory || [] }));
+      recurringTemplates = data.recurringTemplates || [];
+      income = data.income || [];
+      billReminders = data.billReminders || [];
+      billStatements = data.billStatements || [];
+      creditCards = data.creditCards || creditCards;
+      allTags = new Set(data.allTags || []);
+      ccAmounts = data.ccAmounts || {};
+      notes = data.notes || [];
+      todos = data.todos || [];
+      tobuyItems = data.tobuyItems || [];
+      checklist = data.checklist || [];
+      savingsGoals = data.savingsGoals || [];
+    }
+
+    function refreshAllViews() {
+      renderTagSuggestions();
+      renderBillReminders();
+      renderCreditCards();
+      renderNotes();
+      renderChecklist();
+      renderTobuy();
+      renderGoals();
+      updateDashboard();
+      applyFilters();
+      checkRecurringReminder();
+    }
+
+    // Auto-save: writes to localStorage always, and Firebase if configured.
+    let autoSaveTimer = null;
+    let isApplyingCloudData = false;
+    let initialCloudLoadDone = false;
+
+    function autoSave() {
+      const data = gatherData();
+      // Always back up locally
+      try { localStorage.setItem('meiyMoneyBackup', JSON.stringify(data)); } catch (e) {}
+
+      // Skip cloud write if we're currently applying data received FROM the cloud
+      if (isApplyingCloudData) return;
+
+      // Don't write to cloud until we've received the first cloud snapshot,
+      // otherwise initial local/seed data could overwrite real cloud data.
+      if (window.firebaseReady && !initialCloudLoadDone) return;
+
+      // Debounce cloud writes so rapid edits don't spam Firebase
+      if (window.firebaseReady && window.firebaseSave) {
+        updateSyncStatus('saving');
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => {
+          window.firebaseSave(data);
+        }, 800);
+      }
+    }
+
+    // Called by Firebase listener when cloud data changes
+    window.loadFromFirebase = function(cloudData) {
+      isApplyingCloudData = true;
+      applyData(cloudData);
+      refreshAllViews();
+      isApplyingCloudData = false;
+      initialCloudLoadDone = true;
+    };
+
+    // Called when the cloud has no document yet (first ever run on this project)
+    window.markCloudEmpty = function() {
+      initialCloudLoadDone = true;
+      // Push whatever we currently have (local/seed data) up to the cloud
+      if (window.firebaseSave) {
+        updateSyncStatus('saving');
+        window.firebaseSave(gatherData());
+      }
+    };
+
+    // Sync status indicator in header
+    window.updateSyncStatus = function(status) {
+      const el = document.getElementById('syncStatus');
+      if (!el) return;
+      const map = {
+        saving: { text: '⏳ Saving…', color: '#FFB700' },
+        synced: { text: '☁️ Synced', color: '#A8D5A2' },
+        error:  { text: '⚠️ Offline', color: '#FFB4A2' },
+        local:  { text: '💾 Local only', color: 'rgba(255,255,255,0.6)' }
+      };
+      const s = map[status] || map.local;
+      el.textContent = s.text;
+      el.style.color = s.color;
+    };
+
     let balanceHidden = false;
     let actualBalanceText = '₱0.00';
 
@@ -1567,6 +1805,7 @@
         const isFirstUnpaid = index === 0 && unpaidCards.length > 0 && !cc.paid && !cc.noAmountDue;
         return renderCreditCard(cc, isFirstUnpaid);
       }).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function renderCreditCard(cc, isFirstUnpaid = false) {
@@ -1786,6 +2025,7 @@
           </div>
         `;
       }).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function startEditBillAmount(id) {
@@ -1841,6 +2081,7 @@
           </div>
         `;
       }).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     let activeNoteMenu = null;
@@ -1985,6 +2226,7 @@
           <button onclick="deleteChecklistItem(${item.id})" class="delete-btn">Delete</button>
         </div>
       `).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function toggleChecklist(id) {
@@ -2080,6 +2322,7 @@
           </div>
         `;
       }).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function updateGoalProgress(id) {
@@ -2213,6 +2456,7 @@
           <button onclick="deleteTobuy(${item.id})" class="delete-btn">Delete</button>
         </div>
       `).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function deleteNote(id) {
@@ -2326,6 +2570,7 @@
           </td>
         </tr>
       `).join('');
+      if (typeof autoSave === "function" && !isApplyingCloudData) autoSave();
     }
 
     function unpayBillStatement(id) {
@@ -2671,6 +2916,7 @@
       updateSpendingForecast();
       updateAchievements();
       checkRecurringReminder();
+      if (typeof autoSave === 'function') autoSave();
     }
 
     function updateSpendingForecast() {
@@ -3475,10 +3721,31 @@
 
     // ===== PAGE INITIALIZATION ON LOAD =====
     try {
-      updateDashboard();
+      // Load from localStorage first (instant, works offline & when Firebase off)
+      const localBackup = localStorage.getItem('meiyMoneyBackup');
+      if (localBackup) {
+        isApplyingCloudData = true; // reuse guard to avoid immediate cloud echo
+        applyData(JSON.parse(localBackup));
+        isApplyingCloudData = false;
+      }
+    } catch (e) {
+      console.log('Local load skipped:', e.message);
+    }
+
+    try {
+      refreshAllViews();
     } catch (e) {
       console.log('Initialization error (safe to ignore):', e.message);
     }
+
+    // Set initial sync status after a moment (gives Firebase time to connect)
+    setTimeout(() => {
+      if (window.firebaseReady) {
+        if (!initialCloudLoadDone) updateSyncStatus('saving');
+      } else {
+        updateSyncStatus('local');
+      }
+    }, 1500);
 
     document.getElementById('editCCForm').addEventListener('submit', (e) => {
       e.preventDefault();
