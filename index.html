@@ -53,9 +53,12 @@
     .bordered-section input, .bordered-section select, .bordered-section textarea { border: 2px solid #8B998C; border-radius: 12px; }
     label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #666; font-family: 'Poppins', sans-serif; }
     button[type="submit"] { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; font-family: 'Poppins', sans-serif; }
-    .delete-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #EF4444; border: 0.5px solid #EF4444; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
-    .details-btn, .edit-btn, .paid-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; margin-left: 4px; font-weight: 500; }
+    .delete-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #A65D57; border: 0.5px solid #C08C87; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; margin-left: 4px; transition: all 0.2s ease; }
+    .delete-btn:hover { background: rgba(166, 93, 87, 0.1); border-color: #A65D57; }
+    .details-btn, .edit-btn, .paid-btn { padding: 4px 10px; font-size: 12px; background: transparent; color: #8B998C; border: 0.5px solid #8B998C; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; margin-left: 4px; font-weight: 500; transition: all 0.2s ease; }
     .details-btn:hover, .edit-btn:hover, .paid-btn:hover { background: rgba(139, 153, 140, 0.1); }
+    .action-cell { text-align: center; white-space: nowrap; }
+    .action-cell .details-btn:first-child, .action-cell .edit-btn:first-child, .action-cell .delete-btn:first-child { margin-left: 0; }
     .export-btn { padding: 10px 16px; font-size: 14px; font-weight: 600; background: linear-gradient(135deg, #8B998C 0%, #626E6A 100%); color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; }
     .preset-btn { padding: 6px 12px; font-size: 13px; background: #f5f5f5; border: 0.5px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
     .preset-btn:hover { background: #e8e8e8; }
@@ -599,7 +602,7 @@
                 <th>Type</th>
                 <th>Name</th>
                 <th>Amount</th>
-                <th style="text-align: right;">Actions</th>
+                <th style="text-align: center;">Actions</th>
               </tr>
             </thead>
             <tbody id="billStatementsList"></tbody>
@@ -890,6 +893,8 @@
         </form>
       </div>
     </div>
+
+    <div class="modal-overlay" id="duplicateModal" onclick="closeDuplicateModal()">
       <div class="modal-content details-modal" onclick="event.stopPropagation()">
         <h3 style="margin-bottom: 1rem; font-size: 20px;">⚠️ Possible Duplicate</h3>
         <p style="font-size: 14px; color: #666; margin-bottom: 1.5rem; line-height: 1.6;">
@@ -1310,14 +1315,21 @@
 
     function showDuplicateWarning(transaction, duplicate) {
       pendingTransaction = transaction;
-      
+
+      // Safe lookups in case a category was renamed/deleted
+      const dupCat = categories[duplicate.category] || { icon: '📝', name: duplicate.category || 'Unknown' };
+      let dateLabel = duplicate.date;
+      try {
+        dateLabel = new Date(duplicate.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      } catch (e) {}
+
       document.getElementById('duplicateInfo').innerHTML = `
         <div style="margin-bottom: 1rem;">
           <strong>Found Transaction:</strong><br>
-          ${categories[duplicate.category].icon} ${categories[duplicate.category].name}<br>
-          <strong>Amount:</strong> ₱${duplicate.amount.toLocaleString('en-PH', {maximumFractionDigits: 2})}<br>
-          <strong>Date:</strong> ${new Date(duplicate.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}<br>
-          <strong>Payment:</strong> ${duplicate.paymentMethod}
+          ${dupCat.icon} ${dupCat.name}<br>
+          <strong>Amount:</strong> ₱${Number(duplicate.amount).toLocaleString('en-PH', {maximumFractionDigits: 2})}<br>
+          <strong>Date:</strong> ${dateLabel}<br>
+          <strong>Payment:</strong> ${duplicate.paymentMethod || '-'}
           ${duplicate.notes ? `<br><strong>Notes:</strong> ${duplicate.notes}` : ''}
         </div>
       `;
@@ -2435,7 +2447,7 @@
           </div>
           <div style="display: flex; gap: 6px;">
             <button onclick="openEditCategoryModal('${key}')" style="flex: 1; padding: 8px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;">Edit</button>
-            <button onclick="deleteCategory('${key}')" class="delete-btn" style="flex: 1;">Delete</button>
+            <button onclick="deleteCategory('${key}')" class="delete-btn" style="flex: 1; margin-left: 0;">Delete</button>
           </div>
         </div>
       `).join('');
@@ -2656,7 +2668,7 @@
           <td>${s.type}</td>
           <td>${s.name}</td>
           <td style="font-weight: 600; color: #10b981;">₱${s.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-          <td style="text-align: right;">
+          <td style="text-align: center;">
             <button onclick="unpayBillStatement(${s.id})" class="edit-btn">Mark Unpaid</button>
             <button onclick="deleteBillStatement(${s.id})" class="delete-btn">Delete</button>
           </td>
