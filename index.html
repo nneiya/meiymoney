@@ -84,6 +84,8 @@
     .transactions-table tr:hover { background: #f5f5f5; }
     .transactions-table tr.recurring-row { background: rgba(139, 153, 140, 0.05); }
     .transactions-table tr.paid-row { opacity: 0.6; }
+    .transactions-table tr.week-separator td { background: #F1ECD9; color: #45504C; font-weight: 600; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; padding: 8px 12px; border-top: 2px solid #8B998C; border-bottom: 2px solid #8B998C; font-family: 'Poppins', sans-serif; }
+    .transactions-table tr.week-separator:hover td { background: #F1ECD9; }
     .recurring-badge { background: #8B998C; color: #F1ECD9; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; }
     .paid-badge { background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: 600; margin-left: 4px; }
     
@@ -847,7 +849,47 @@
       </div>
     </div>
 
-    <div class="modal-overlay" id="duplicateModal" onclick="closeDuplicateModal()">
+    <div class="modal-overlay" id="editCategoryModal" onclick="closeEditCategoryModal()">
+      <div class="modal-content details-modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 1.5rem;">Edit Category</h3>
+        <form id="editCategoryForm">
+          <div style="margin-bottom: 1rem;">
+            <label>Name</label>
+            <input type="text" id="editCategoryName" required style="border: 0.5px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Emoji / Icon</label>
+            <input type="text" id="editCategoryIcon" maxlength="4" required style="border: 0.5px solid #ccc;" placeholder="🍽️">
+            <div style="font-size: 11px; color: #999; margin-top: 4px;">Tip: On phone, tap the emoji key on your keyboard. On desktop, press Win + . (period) or Ctrl + Cmd + Space on Mac.</div>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label>Color</label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="color" id="editCategoryColor" style="width: 56px; height: 40px; padding: 2px; border: 0.5px solid #ccc; border-radius: 8px; cursor: pointer;">
+              <span id="editCategoryColorHex" style="font-family: 'Poppins', sans-serif; font-size: 13px; color: #666;"></span>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+              <span onclick="setEditCategoryColor('#8B998C')" style="width: 26px; height: 26px; background: #8B998C; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#CEC8B2')" style="width: 26px; height: 26px; background: #CEC8B2; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#626E6A')" style="width: 26px; height: 26px; background: #626E6A; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#45504C')" style="width: 26px; height: 26px; background: #45504C; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#F1ECD9')" style="width: 26px; height: 26px; background: #F1ECD9; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#D98880')" style="width: 26px; height: 26px; background: #D98880; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#85C1A3')" style="width: 26px; height: 26px; background: #85C1A3; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+              <span onclick="setEditCategoryColor('#E8C07D')" style="width: 26px; height: 26px; background: #E8C07D; border-radius: 6px; cursor: pointer; border: 1px solid #ccc;"></span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="submit" style="flex: 1; padding: 10px 24px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Save Changes
+            </button>
+            <button type="button" onclick="closeEditCategoryModal()" style="flex: 1; padding: 10px 24px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600; margin-top: 0;">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
       <div class="modal-content details-modal" onclick="event.stopPropagation()">
         <h3 style="margin-bottom: 1rem; font-size: 20px;">⚠️ Possible Duplicate</h3>
         <p style="font-size: 14px; color: #666; margin-bottom: 1.5rem; line-height: 1.6;">
@@ -2391,9 +2433,37 @@
             </div>
             <div style="width: 20px; height: 20px; background: ${cat.color}; border-radius: 4px; border: 1px solid #ccc;"></div>
           </div>
-          <button onclick="deleteCategory('${key}')" class="delete-btn" style="width: 100%;">Delete</button>
+          <div style="display: flex; gap: 6px;">
+            <button onclick="openEditCategoryModal('${key}')" style="flex: 1; padding: 8px; background: #8B998C; color: #F1ECD9; border: none; border-radius: 8px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;">Edit</button>
+            <button onclick="deleteCategory('${key}')" class="delete-btn" style="flex: 1;">Delete</button>
+          </div>
         </div>
       `).join('');
+    }
+
+    let editingCategoryKey = null;
+
+    function setEditCategoryColor(color) {
+      document.getElementById('editCategoryColor').value = color;
+      document.getElementById('editCategoryColorHex').textContent = color;
+    }
+
+    function openEditCategoryModal(key) {
+      const cat = categories[key];
+      if (!cat) return;
+      editingCategoryKey = key;
+      document.getElementById('editCategoryName').value = cat.name;
+      document.getElementById('editCategoryIcon').value = cat.icon;
+      // color input needs a valid hex; fall back to a default if the stored color isn't hex
+      const hex = /^#[0-9A-Fa-f]{6}$/.test(cat.color) ? cat.color : '#8B998C';
+      document.getElementById('editCategoryColor').value = hex;
+      document.getElementById('editCategoryColorHex').textContent = cat.color;
+      document.getElementById('editCategoryModal').classList.add('show');
+    }
+
+    function closeEditCategoryModal() {
+      document.getElementById('editCategoryModal').classList.remove('show');
+      editingCategoryKey = null;
     }
 
     function deleteCategory(key) {
@@ -2759,6 +2829,34 @@
       applyFilters();
     }
 
+    // Returns the Monday of the week for a given date string (local time)
+    function getWeekStart(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      const day = d.getDay(); // 0 = Sunday, 1 = Monday...
+      const diff = (day === 0 ? -6 : 1) - day; // shift back to Monday
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+
+    function formatWeekLabel(weekStart) {
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const opts = { month: 'short', day: 'numeric' };
+      const startStr = weekStart.toLocaleDateString('en-US', opts);
+      const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `Week of ${startStr} – ${endStr}`;
+    }
+
+    function noFiltersActive() {
+      return filters.month === 'all' &&
+             filters.category === 'all' &&
+             filters.payment === 'all' &&
+             filters.tag === 'all' &&
+             filters.recurring === 'all' &&
+             (!filters.search || filters.search === '') &&
+             !filters.startDate && !filters.endDate;
+    }
+
     function renderTransactions() {
       const filtered = getFilteredTransactions();
       const tbody = document.getElementById('transactionsList');
@@ -2772,14 +2870,31 @@
         return;
       }
 
+      const showWeekSeparators = noFiltersActive();
+      let lastWeekKey = null;
+
       tbody.innerHTML = filtered.map(t => {
         const cat = categories[t.category];
         const rowClass = t.isRecurring ? 'recurring-row' : '';
         const notesHtml = t.notes ? `<span style="font-style: italic; font-size: 12px;">${t.notes}</span>` : '';
         const tagsHtml = t.tags && t.tags.length > 0 ? t.tags.map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('') : '';
         const notesAndTags = notesHtml + (notesHtml && tagsHtml ? ' ' : '') + tagsHtml;
+
+        let separatorRow = '';
+        if (showWeekSeparators) {
+          const weekStart = getWeekStart(t.date);
+          const weekKey = weekStart.toISOString().split('T')[0];
+          if (weekKey !== lastWeekKey) {
+            lastWeekKey = weekKey;
+            separatorRow = `
+              <tr class="week-separator">
+                <td colspan="6">${formatWeekLabel(weekStart)}</td>
+              </tr>
+            `;
+          }
+        }
         
-        return `
+        return separatorRow + `
           <tr class="${rowClass}">
             <td>${new Date(t.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
             <td>
@@ -3792,6 +3907,32 @@
       closeEditCCModal();
       showModal('Success', 'Credit card updated successfully!');
       renderCreditCards();
+    });
+
+    // Keep the hex label in sync when the color picker changes
+    document.getElementById('editCategoryColor').addEventListener('input', (e) => {
+      document.getElementById('editCategoryColorHex').textContent = e.target.value;
+    });
+
+    document.getElementById('editCategoryForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingCategoryKey) return;
+
+      const newName = document.getElementById('editCategoryName').value.trim();
+      const newIcon = document.getElementById('editCategoryIcon').value.trim();
+      const newColor = document.getElementById('editCategoryColor').value;
+
+      if (categories[editingCategoryKey]) {
+        categories[editingCategoryKey].name = newName;
+        categories[editingCategoryKey].icon = newIcon;
+        categories[editingCategoryKey].color = newColor;
+      }
+
+      closeEditCategoryModal();
+      renderCategoryButtons();
+      renderCategoryList();
+      updateDashboard();
+      showModal('Success', 'Category updated successfully!');
     });
   </script>
 </body>
