@@ -1184,6 +1184,7 @@
         tobuyItems,
         checklist,
         savingsGoals,
+        categories,
         savedAt: new Date().toISOString()
       };
     }
@@ -1203,9 +1204,14 @@
       tobuyItems = data.tobuyItems || [];
       checklist = data.checklist || [];
       savingsGoals = data.savingsGoals || [];
+      if (data.categories && typeof data.categories === 'object') {
+        Object.keys(data.categories).forEach(key => { categories[key] = data.categories[key]; });
+      }
     }
 
     function refreshAllViews() {
+      renderCategoryButtons();
+      renderCategoryList();
       renderTagSuggestions();
       renderBillReminders();
       renderCreditCards();
@@ -1213,6 +1219,7 @@
       renderChecklist();
       renderTobuy();
       renderGoals();
+      renderIncome();
       updateDashboard();
       applyFilters();
       checkRecurringReminder();
@@ -2886,7 +2893,7 @@
       let lastWeekKey = null;
 
       tbody.innerHTML = filtered.map(t => {
-        const cat = categories[t.category];
+        const cat = categories[t.category] || { name: t.category || 'Unknown', icon: '📝', color: '#8B998C' };
         const rowClass = t.isRecurring ? 'recurring-row' : '';
         const notesHtml = t.notes ? `<span style="font-style: italic; font-size: 12px;">${t.notes}</span>` : '';
         const tagsHtml = t.tags && t.tags.length > 0 ? t.tags.map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('') : '';
@@ -3414,7 +3421,7 @@
         const filtered = getFilteredTransactions();
         let csv = 'Date,Category,Amount,Payment Method,Recurring,Tags,Notes,Added On\n';
         filtered.forEach(t => {
-          const cat = categories[t.category].name;
+          const cat = (categories[t.category] || { name: t.category || 'Unknown' }).name;
           const tags = (t.tags || []).join('; ');
           const recurring = t.isRecurring ? 'Yes' : 'No';
           const addedOn = new Date(t.createdAt).toLocaleDateString('en-US');
@@ -3509,6 +3516,14 @@
       reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
+
+          // Restore custom categories first so transactions referencing them render safely
+          if (data.categories && typeof data.categories === 'object') {
+            Object.keys(data.categories).forEach(key => {
+              categories[key] = data.categories[key];
+            });
+          }
+
           transactions = (data.transactions || []).map(t => ({
             ...t,
             editHistory: t.editHistory || []
@@ -3525,7 +3540,9 @@
           tobuyItems = data.tobuyItems || [];
           checklist = data.checklist || [];
           savingsGoals = data.savingsGoals || [];
-          showModal('Data Loaded', 'Your budget data has been restored successfully!');
+
+          renderCategoryButtons();
+          renderCategoryList();
           renderTagSuggestions();
           renderBillReminders();
           renderCreditCards();
@@ -3533,12 +3550,28 @@
           renderChecklist();
           renderTobuy();
           renderGoals();
+          renderIncome();
           updateDashboard();
+          applyFilters();
           checkRecurringReminder();
           checkDueNotifications();
+
+          // Push the loaded data up to the cloud so all devices get it
+          if (window.firebaseReady && window.firebaseSave) {
+            initialCloudLoadDone = true; // allow the write
+            window.firebaseSave(gatherData());
+          }
+
+          showModal('Data Loaded', 'Your budget data has been restored successfully!');
         } catch (err) {
           showModal('Error', 'Error loading data: ' + err.message);
         }
+        // Reset the file input so selecting the same file again still triggers onchange
+        event.target.value = '';
+      };
+      reader.onerror = () => {
+        showModal('Error', 'Could not read the file. Please try again.');
+        event.target.value = '';
       };
       reader.readAsText(file);
     }
