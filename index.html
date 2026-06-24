@@ -575,6 +575,7 @@
                 <th>Amount</th>
                 <th>Payment</th>
                 <th>Notes</th>
+                <th>Tags</th>
                 <th style="text-align: center;">Actions</th>
               </tr>
             </thead>
@@ -1089,10 +1090,21 @@
         // Expose save function globally so the main script can call it
         window.firebaseSave = async function(data) {
           if (!firebaseReady) return;
+          // Safety timeout: if Firestore doesn't respond in 10s, show offline
+          let settled = false;
+          const timeout = setTimeout(() => {
+            if (!settled) {
+              window.updateSyncStatus && window.updateSyncStatus('error');
+            }
+          }, 10000);
           try {
             await setDoc(doc(db, "budgets", USER_DOC_ID), { payload: JSON.stringify(data), updatedAt: new Date().toISOString() });
+            settled = true;
+            clearTimeout(timeout);
             window.updateSyncStatus && window.updateSyncStatus('synced');
           } catch (e) {
+            settled = true;
+            clearTimeout(timeout);
             console.error('Firebase save error:', e);
             window.updateSyncStatus && window.updateSyncStatus('error');
           }
@@ -1135,6 +1147,11 @@
       'healthcare': { name: 'Healthcare', icon: '🏥', color: '#626E6A' },
       'business': { name: 'Business', icon: '💼', color: '#45504C' }
     };
+
+    // Safe category lookup — never throws even if the category was deleted/renamed.
+    function getCat(key) {
+      return categories[key] || { name: key || 'Unknown', icon: '📝', color: '#8B998C' };
+    }
 
     let creditCards = [
       { name: 'Unionbank Platinum', statement: 7, due: 23, custom: false },
@@ -1391,7 +1408,7 @@
           <h4 style="margin: 0 0 1rem; font-weight: 600;">Current Values:</h4>
           <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #8B998C;">
             <div style="margin-bottom: 8px;"><strong>Amount:</strong> ₱${transaction.amount.toLocaleString('en-PH')}</div>
-            <div style="margin-bottom: 8px;"><strong>Category:</strong> ${categories[transaction.category] ? categories[transaction.category].name : transaction.category}</div>
+            <div style="margin-bottom: 8px;"><strong>Category:</strong> ${categories[transaction.category] ? getCat(transaction.category).name : transaction.category}</div>
             <div style="margin-bottom: 8px;"><strong>Payment:</strong> ${transaction.paymentMethod}</div>
             <div style="margin-bottom: 8px;"><strong>Date:</strong> ${new Date(transaction.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
             ${transaction.notes ? `<div><strong>Notes:</strong> ${transaction.notes}</div>` : ''}
@@ -1530,11 +1547,11 @@
           const percentChange = ((currentSum - lastSum) / lastSum) * 100;
           if (Math.abs(percentChange) > 20) {
             insights.push({
-              category: categories[cat].name,
+              category: getCat(cat).name,
               change: percentChange,
               current: currentSum,
               last: lastSum,
-              icon: categories[cat].icon
+              icon: getCat(cat).icon
             });
           }
         }
@@ -1567,7 +1584,7 @@
       const topCategory = Object.entries(categorySums).sort((a, b) => b[1] - a[1])[0];
       if (topCategory) {
         const percentage = (topCategory[1] / monthTransactions.reduce((sum, t) => sum + t.amount, 0)) * 100;
-        analyses.push(`${categories[topCategory[0]].name} accounts for ${percentage.toFixed(0)}% of your spending. This is your biggest expense category.`);
+        analyses.push(`${getCat(topCategory[0]).name} accounts for ${percentage.toFixed(0)}% of your spending. This is your biggest expense category.`);
       }
       
       const daysIntoMonth = new Date().getDate();
@@ -1629,7 +1646,7 @@
       let html = '';
       
       if (!isIncome) {
-        const cat = categories[transaction.category];
+        const cat = getCat(transaction.category);
         const tagsHtml = transaction.tags && transaction.tags.length > 0 ? transaction.tags.join(', ') : 'None';
         
         html = `
@@ -2491,7 +2508,7 @@
         return;
       }
       
-      if (confirm(`Delete "${categories[key].name}" category?`)) {
+      if (confirm(`Delete "${getCat(key).name}" category?`)) {
         // Update any transactions using this category to "commute"
         transactions.forEach(t => {
           if (t.category === key) t.category = 'commute';
@@ -2766,7 +2783,7 @@
       } else if (type === 'category') {
         options = ['all', ...Object.keys(categories)].map(c => ({
           value: c,
-          label: c === 'all' ? 'All' : categories[c].name,
+          label: c === 'all' ? 'All' : getCat(c).name,
           active: filters.category === c
         }));
       } else if (type === 'payment') {
@@ -2885,7 +2902,7 @@
       document.getElementById('filteredTotal').textContent = '₱' + total.toLocaleString('en-PH', {minimumFractionDigits: 2});
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #666;">No transactions match your filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #666;">No transactions match your filters</td></tr>';
         return;
       }
 
@@ -2893,11 +2910,10 @@
       let lastWeekKey = null;
 
       tbody.innerHTML = filtered.map(t => {
-        const cat = categories[t.category] || { name: t.category || 'Unknown', icon: '📝', color: '#8B998C' };
+        const cat = getCat(t.category);
         const rowClass = t.isRecurring ? 'recurring-row' : '';
-        const notesHtml = t.notes ? `<span style="font-style: italic; font-size: 12px;">${t.notes}</span>` : '';
-        const tagsHtml = t.tags && t.tags.length > 0 ? t.tags.map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join('') : '';
-        const notesAndTags = notesHtml + (notesHtml && tagsHtml ? ' ' : '') + tagsHtml;
+        const notesHtml = t.notes ? `<span style="font-style: italic; font-size: 12px;">${t.notes}</span>` : '-';
+        const tagsHtml = t.tags && t.tags.length > 0 ? t.tags.map(tag => `<span class="tag" onclick="filterByTag('${tag}')">${tag}</span>`).join(' ') : '-';
 
         let separatorRow = '';
         if (showWeekSeparators) {
@@ -2907,7 +2923,7 @@
             lastWeekKey = weekKey;
             separatorRow = `
               <tr class="week-separator">
-                <td colspan="6">${formatWeekLabel(weekStart)}</td>
+                <td colspan="7">${formatWeekLabel(weekStart)}</td>
               </tr>
             `;
           }
@@ -2922,7 +2938,8 @@
             </td>
             <td style="font-weight: 600; color: ${cat.color};">₱${t.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
             <td>${t.paymentMethod}</td>
-            <td>${notesAndTags || '-'}</td>
+            <td>${notesHtml}</td>
+            <td>${tagsHtml}</td>
             <td style="text-align: center;">
               <button class="details-btn" onclick="showTransactionDetails(${t.id})">Details</button>
               <button class="edit-btn" onclick="showEditModal(${t.id})">Edit</button>
@@ -3049,7 +3066,7 @@
 
       if (monthTransactions.length > 0) {
         const mostExpensive = monthTransactions.reduce((max, t) => t.amount > max.amount ? t : max);
-        document.getElementById('mostExpensive').textContent = '₱' + mostExpensive.amount.toLocaleString('en-PH', {maximumFractionDigits: 0}) + ' (' + categories[mostExpensive.category].name + ')';
+        document.getElementById('mostExpensive').textContent = '₱' + mostExpensive.amount.toLocaleString('en-PH', {maximumFractionDigits: 0}) + ' (' + getCat(mostExpensive.category).name + ')';
         
         const paymentCounts = {};
         monthTransactions.forEach(t => paymentCounts[t.paymentMethod] = (paymentCounts[t.paymentMethod] || 0) + 1);
@@ -3062,7 +3079,7 @@
         const categorySums = {};
         monthTransactions.forEach(t => categorySums[t.category] = (categorySums[t.category] || 0) + t.amount);
         const topCat = Object.entries(categorySums).sort((a, b) => b[1] - a[1])[0];
-        document.getElementById('topCategory').textContent = categories[topCat[0]].name + ' (₱' + Math.round(topCat[1]).toLocaleString('en-PH') + ')';
+        document.getElementById('topCategory').textContent = getCat(topCat[0]).name + ' (₱' + Math.round(topCat[1]).toLocaleString('en-PH') + ')';
       }
 
       renderInsights();
@@ -3201,7 +3218,7 @@
         achievements.push({
           icon: '🎯',
           title: 'Top Category',
-          description: `${categories[topCatName].name}: ₱${Math.round(topAmount)}`
+          description: `${getCat(topCatName).name}: ₱${Math.round(topAmount)}`
         });
       }
       
@@ -3239,9 +3256,9 @@
       let filtered = getFilteredTransactions(analyticsFilters);
 
       const categoryData = Object.keys(categories).map(cat => ({
-        name: categories[cat].name,
+        name: getCat(cat).name,
         amount: filtered.filter(t => t.category === cat).reduce((sum, t) => sum + t.amount, 0),
-        color: categories[cat].color
+        color: getCat(cat).color
       })).filter(c => c.amount > 0);
 
       if (categoryChart) categoryChart.destroy();
@@ -3968,9 +3985,9 @@
       const newColor = document.getElementById('editCategoryColor').value;
 
       if (categories[editingCategoryKey]) {
-        categories[editingCategoryKey].name = newName;
-        categories[editingCategoryKey].icon = newIcon;
-        categories[editingCategoryKey].color = newColor;
+        getCat(editingCategoryKey).name = newName;
+        getCat(editingCategoryKey).icon = newIcon;
+        getCat(editingCategoryKey).color = newColor;
       }
 
       closeEditCategoryModal();
